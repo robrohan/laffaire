@@ -1,0 +1,10 @@
+<header>
+  <nav>
+    <a href="/">Root Home</a>
+    <a href="/-/home">Secure Home</a>
+  </nav>
+  <div class="user_menu">
+    <a href="/-/logout" title="{{ .User.Email }}"><img class="user_avatar"
+      src="{{ .User.Picture}}" alt="{{ .User.Email }}" /></a>
+  </div>
+</header>

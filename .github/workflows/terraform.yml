@@ -1,0 +1,43 @@
+name: 'Go Web Template Build'
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  workload:
+    name: 'Go Web Template Workload'
+    runs-on: ubuntu-latest
+    environment: production
+
+    # Use the Bash shell regardless whether the GitHub Actions 
+    # runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+
+    - name: Install make
+      run: sudo apt-get install make
+
+    - name: Use Golang
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21.x'
+    - run: cp .env.template .env
+    - run: make install
+    - run: make test
+    - run: make build
+      # env:
+      #   VERSION: "${{ vars.FORMULAIRE_VERSION }}"
+      #   COLLECTOR: "${{ vars.COLLECTOR_URL }}"
