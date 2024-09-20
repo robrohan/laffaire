@@ -20,10 +20,29 @@ type User struct {
 	Salt    *string `db:"salt"`
 }
 
-type Plan struct {
-	UUID   string `db:"uuid"`
-	UserId string `db:"uuid"`
-	Json   string `db:"sheet"`
+/////////////////////////////////////////////////////////
+
+// Entry is a single item on a calendar
+type Entry struct {
+	UUID        string `db:"uuid"`
+	EntryId     string `db:"entry_uuid"`
+	Subject     string `db:"subject"`
+	StartDate   string `db:"start_date"`
+	StartTime   string `db:"start_time"`
+	EndDate     string `db:"end_date"`
+	EndTime     string `db:"end_time"`
+	AllDayEvent bool   `db:"all_day_event"`
+	Description string `db:"description"`
+	Location    string `db:"location"`
+	Private     bool   `db:"private"`
+}
+
+// Event is a group of Entries - for example Training, Doctors Appointment, etc
+type Event struct {
+	UUID        string `db:"uuid"`
+	UserId      string `db:"user_uuid"`
+	Title       string `db:"title"`
+	Description string `db:"description"`
 }
 
 //////////////////////////////////

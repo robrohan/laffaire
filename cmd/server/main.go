@@ -165,6 +165,11 @@ func run() error {
 		// Secure pages... "the app"
 		secure.HandleFunc("/logout", handleLogout(env)).Methods("GET")
 		secure.HandleFunc("/home", handlers.ServePage(env, templates)).Methods("GET")
+
+		secure.HandleFunc("/events", handlers.ServePage(env, templates)).Methods("GET")
+		secure.HandleFunc("/event", handlers.ServePage(env, templates)).Methods("GET", "POST")
+		secure.HandleFunc("/entries", handlers.ServePage(env, templates)).Methods("GET")
+		secure.HandleFunc("/entry", handlers.ServePage(env, templates)).Methods("GET", "POST")
 	}
 
 	api := http.Server{
