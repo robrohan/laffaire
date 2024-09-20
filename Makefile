@@ -21,7 +21,7 @@ install:
 
 # Run all go unit tests
 test:
-	go test ./...
+	go test -v ./...
 
 # Runs the localhost server
 start:
@@ -39,12 +39,12 @@ build: clean
 
 docker_build: build
 	docker ps ; \
-		docker build -t $(DOCKER_CONTAINER) .
+	docker build -t $(DOCKER_CONTAINER) .
 
 #	Using a different enviroment variable set for prod
 docker_build:
 	docker ps ; \
-		docker run --env-file=.env.production -p 8080:3000 $(DOCKER_CONTAINER)
+	docker run --env-file=.env.production -p 8080:3000 $(DOCKER_CONTAINER)
 
 #	Grab a base css that styles form elements with some basic style
 fetch_base_css:

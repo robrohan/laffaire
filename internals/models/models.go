@@ -20,6 +20,14 @@ type User struct {
 	Salt    *string `db:"salt"`
 }
 
+type Plan struct {
+	UUID   string `db:"uuid"`
+	UserId string `db:"uuid"`
+	Json   string `db:"sheet"`
+}
+
+//////////////////////////////////
+
 func NewUser(authid string, email string, picture string) *User {
 	id := uuid.New()
 	a := User{
