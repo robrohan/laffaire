@@ -2,7 +2,7 @@
 
 <h1><a href="/-/events">Events</a> &gt; Entries</h1>
 
-<a href="/-/entry">+New</a>
+<a href="/-/entry?event={{.EventUUID}}">+New</a>
 
 <table>
     <tr>
@@ -12,13 +12,27 @@
         <th>Description</th>
         <th>&nbsp;</th>
     </tr>
+
+    {{ range $val := .Entries }}
     <tr>
+        <td>{{ $val.Subject }}</td>
+        <td>{{ $val.StartDate }}</td>
+        <td>{{ $val.EndDate }}</td>
+        <td>{{ $val.Description }}</td>
+        <td>
+            <a href="/-/entry?event={{$val.EventId}}&entry={{$val.UUID}}">✏️</a>
+            <a href="#">❌</a>
+        </td>
+    </tr>
+    {{ end }}
+
+    <!-- <tr>
         <td>30 minute workout</td>
         <td>2024-10-10</td>
         <td>2024-10-10</td>
         <td>Lift x X many times and do things</td>
         <td>
-            <a href="/-/entry?entry=">✏️</a>
+            <a href="/-/entry?event=&entry=">✏️</a>
             <a href="#">❌</a>
         </td>
     </tr>
@@ -28,10 +42,10 @@
         <td>2024-10-10</td>
         <td>Lift x X many times and do things</td>
         <td>
-            <a href="/-/entry?entry=">✏️</a>
+            <a href="/-/entry?event=&entry=">✏️</a>
             <a href="#">❌</a>
         </td>
-    </tr>
+    </tr> -->
 </table>
 
 

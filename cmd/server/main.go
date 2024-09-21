@@ -159,6 +159,8 @@ func run() error {
 		// Non-logged in pages
 		router.HandleFunc("/", handlers.ServePage(env, templates))
 		router.HandleFunc("/about", handlers.ServePage(env, templates))
+
+		router.HandleFunc("/ical", handlers.ServePage(env, templates)).Methods("GET")
 		//////////////////////////
 		// Routes needed for auth
 		router.HandleFunc("/login", handleLogin(env, oauthConfig)).Methods("GET")
@@ -170,8 +172,9 @@ func run() error {
 
 		secure.HandleFunc("/events", handlers.EventsPage(env, templates)).Methods("GET")
 		secure.HandleFunc("/event", handlers.EventPage(env, templates)).Methods("GET", "POST")
-		secure.HandleFunc("/entries", handlers.ServePage(env, templates)).Methods("GET")
-		secure.HandleFunc("/entry", handlers.ServePage(env, templates)).Methods("GET", "POST")
+
+		secure.HandleFunc("/entries", handlers.EntriesPage(env, templates)).Methods("GET")
+		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST")
 	}
 
 	api := http.Server{

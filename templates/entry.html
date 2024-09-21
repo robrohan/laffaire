@@ -3,55 +3,72 @@
 <h1>Entry</h1>
 
 <form action="/-/entry" method="POST">
-    <input type="hidden" name="event_uuid">
+    <input type="hidden" name="event_uuid" value="{{ .Entry.EventId }}">
+    <input type="hidden" name="entry_uuid" value="{{ .Entry.UUID }}">
 
     <div class="control">
         <label for="subject">Subject</label>
-        <input type="text" name="subject" id="subject" />
+        <input type="text" name="subject" id="subject" 
+        value="{{ .Entry.Subject }}"
+        />
     </div>
 
     <div class="control">
         <label for="start_date">Start Date</label>
-        <input type="date" id="start_date" name="start_date" />
+        <input type="date" id="start_date" name="start_date" 
+        value="{{ .Entry.StartDate }}"
+        />
     </div>
 
     <div class="control">
         <label for="start_time">Start Time</label>
-        <input type="time" id="start_time" name="start_time" />
+        <input type="time" id="start_time" name="start_time" 
+        value="{{ .Entry.StartTime }}"
+        />
     </div>
 
     <div class="control">
         <label for="end_date">End Date</label>
-        <input type="date" id="end_date" name="end_date" />
+        <input type="date" id="end_date" name="end_date" 
+        value="{{ .Entry.EndDate }}"
+        />
     </div>
 
     <div class="control">
         <label for="end_time">End Time</label>
-        <input type="time" id="end_time" name="end_time" />
+        <input type="time" id="end_time" name="end_time" 
+        value="{{ .Entry.EndTime }}"
+        />
     </div>
 
     <div class="control">
         <label for="all_day_event">All Day Event</label>
         <label class="switch" for="all_day_event">
-            <input type="checkbox" id="all_day_event" name="all_day_event" />
+            <input type="checkbox" id="all_day_event" name="all_day_event" 
+            {{ if .Entry.AllDayEvent }} checked {{ end }}
+            />
             <span class="slider"></span>
         </label>
     </div>
 
     <div class="control">
         <label for="description">Description</label>
-        <textarea id="description" wrap="soft" name="description"></textarea>
+        <textarea id="description" wrap="soft" name="description">{{ .Entry.Description }}</textarea>
     </div>
 
     <div class="control">
         <label for="location">Location</label>
-        <input type="text" name="location" id="location" />
+        <input type="text" name="location" id="location" 
+        value="{{ .Entry.Location }}"
+        />
     </div>
 
     <div class="control">
         <label for="private">Private</label>
         <label class="switch" for="private">
-            <input type="checkbox" id="private" name="private" />
+            <input type="checkbox" id="private" name="private" 
+            {{ if .Entry.Private }} checked {{ end }}
+            />
             <span class="slider"></span>
         </label>
     </div>

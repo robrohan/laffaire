@@ -28,6 +28,17 @@ type eventPageData struct {
 	Event *models.Event
 }
 
+type entriesListPageData struct {
+	pageData
+	EventUUID *uuid.UUID
+	Entries   *[]models.Entry
+}
+
+type entryPageData struct {
+	pageData
+	Entry *models.Entry
+}
+
 func TemplateInit() *template.Template {
 	t, err := template.ParseGlob("./templates/*")
 	if err != nil {
@@ -36,6 +47,116 @@ func TemplateInit() *template.Template {
 	}
 
 	return t
+}
+
+func EntriesPage(env *env.Env, t *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := "entries.html"
+		pd := entriesListPageData{
+			pageData{
+				"Laffaire Home",
+				"Laffaire",
+				env.User,
+			},
+			nil,
+			nil,
+		}
+
+		eventId := r.URL.Query().Get("event")
+		eventUuid, _ := uuid.Parse(eventId)
+		entries, err := env.Repo.GetEntriesByEventId(eventUuid)
+		if err != nil {
+			log.Println("cannot get the event from the db ", err)
+			return
+		}
+
+		pd.Entries = entries
+		pd.EventUUID = &eventUuid
+
+		if t.Lookup(page) != nil {
+			t.ExecuteTemplate(w, page, pd)
+		}
+	}
+}
+
+func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := "entry.html"
+		pd := entryPageData{
+			pageData{
+				"Laffaire Home",
+				"Laffaire",
+				env.User,
+			},
+			nil,
+		}
+
+		// We should always have an event id
+		eventUuid := r.FormValue("event_uuid")
+		if eventUuid == "" {
+			eventUuid = r.URL.Query().Get("event")
+		}
+		log.Println("have event uuid", eventUuid)
+
+		switch r.Method {
+		case "POST":
+			r.ParseForm()
+			entryUuid := r.FormValue("entry_uuid")
+
+			log.Println("event uuid from form is:", entryUuid)
+
+			allday := r.FormValue("all_day_event")
+			private := r.FormValue("private")
+
+			if entryUuid != "" {
+				entry := models.Entry{
+					UUID:        entryUuid,
+					EventId:     eventUuid,
+					Subject:     r.FormValue("subject"),
+					StartDate:   r.FormValue("start_date"),
+					StartTime:   r.FormValue("start_time"),
+					EndDate:     r.FormValue("end_date"),
+					EndTime:     r.FormValue("end_time"),
+					AllDayEvent: (allday == "on"),
+					Description: r.FormValue("description"),
+					Location:    r.FormValue("location"),
+					Private:     (private == "on"),
+				}
+				err := env.Repo.UpsertEntry(&entry)
+				if err != nil {
+					log.Println("upsert error", err)
+					return
+				}
+
+				http.Redirect(w, r, "/-/entries?event="+eventUuid, http.StatusFound)
+			}
+		case "GET":
+			entryUuid := r.URL.Query().Get("entry")
+			if entryUuid != "" {
+				entryId, err := uuid.Parse(entryUuid)
+				if err != nil {
+					log.Println("cannot parse event uuid ", err)
+					return
+				}
+				entry, err := env.Repo.GetEntryById(entryId)
+				if err != nil {
+					log.Println("cannot get the event from the db ", err)
+					return
+				}
+				pd.Entry = entry
+			} else {
+				entry := models.Entry{
+					UUID:    uuid.New().String(),
+					EventId: eventUuid,
+				}
+				pd.Entry = &entry
+			}
+		}
+
+		if t.Lookup(page) != nil {
+			t.ExecuteTemplate(w, page, pd)
+		}
+	}
 }
 
 func EventsPage(env *env.Env, t *template.Template) http.HandlerFunc {
