@@ -1,18 +1,21 @@
-package models
+package env
 
 import (
 	"log/slog"
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/robrohan/go-web-template/internals/models"
+	"github.com/robrohan/go-web-template/internals/repository"
 )
 
 // Env context for db, logger, etc. This is passed within a request
 type Env struct {
 	Db        *sqlx.DB
 	Log       *slog.Logger
-	Cfg       *Config
+	Cfg       *models.Config
 	Router    *mux.Router
-	User      *User
+	User      *models.User
 	RandState string
+	Repo      *repository.DataRepository
 }

@@ -23,6 +23,7 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
+	"github.com/robrohan/go-web-template/internals/env"
 	"github.com/robrohan/go-web-template/internals/handlers"
 	"github.com/robrohan/go-web-template/internals/models"
 	"github.com/robrohan/go-web-template/internals/repository"
@@ -135,12 +136,13 @@ func run() error {
 	v := rand.Int()
 	randState := fmt.Sprintf("%x", v)
 
-	env := &models.Env{
+	env := &env.Env{
 		Db:        db,
 		Log:       log,
 		Router:    router,
 		Cfg:       &cfg,
 		RandState: randState,
+		Repo:      repo,
 	}
 
 	// Routes
@@ -166,8 +168,8 @@ func run() error {
 		secure.HandleFunc("/logout", handleLogout(env)).Methods("GET")
 		secure.HandleFunc("/home", handlers.ServePage(env, templates)).Methods("GET")
 
-		secure.HandleFunc("/events", handlers.ServePage(env, templates)).Methods("GET")
-		secure.HandleFunc("/event", handlers.ServePage(env, templates)).Methods("GET", "POST")
+		secure.HandleFunc("/events", handlers.EventsPage(env, templates)).Methods("GET")
+		secure.HandleFunc("/event", handlers.EventPage(env, templates)).Methods("GET", "POST")
 		secure.HandleFunc("/entries", handlers.ServePage(env, templates)).Methods("GET")
 		secure.HandleFunc("/entry", handlers.ServePage(env, templates)).Methods("GET", "POST")
 	}
@@ -210,7 +212,7 @@ func run() error {
 	return nil
 }
 
-func handleLogin(env *models.Env, oauth *oauth2.Config) http.HandlerFunc {
+func handleLogin(env *env.Env, oauth *oauth2.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: randState should be unique
 		url := oauth.AuthCodeURL(env.RandState)
@@ -218,7 +220,7 @@ func handleLogin(env *models.Env, oauth *oauth2.Config) http.HandlerFunc {
 	}
 }
 
-func handleLogout(env *models.Env) http.HandlerFunc {
+func handleLogout(env *env.Env) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_ = env
 		addCookie(w, cookieName, "", 0)
@@ -226,7 +228,7 @@ func handleLogout(env *models.Env) http.HandlerFunc {
 	}
 }
 
-func handleCallback(env *models.Env, oauth *oauth2.Config, repo *repository.DataRepository) http.HandlerFunc {
+func handleCallback(env *env.Env, oauth *oauth2.Config, repo *repository.DataRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("state") != env.RandState {
 			env.Log.Error("state is not valid")
@@ -296,7 +298,7 @@ func addCookie(w http.ResponseWriter, name, value string, ttl time.Duration) {
 	http.SetCookie(w, &cookie)
 }
 
-func LoginVerify(env *models.Env, repo *repository.DataRepository) mux.MiddlewareFunc {
+func LoginVerify(env *env.Env, repo *repository.DataRepository) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie(cookieName)

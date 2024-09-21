@@ -7,20 +7,33 @@
 <table>
     <tr>
         <th>Title</th>
-        <th>Description</th>
+        <!-- <th>Description</th> -->
         <th>Link</th>
         <th>&nbsp;</th>
     </tr>
+
+    {{ range $val := .Events }}
     <tr>
+        <td>{{ $val.Title }}</td>
+        <!-- <td>{{ $val.Description }}</td> -->
+        <td><a href="/ical/{{ $val.UUID }}">/ical/{{ $val.UUID }}</a></td>
+        <td>
+            <a href="/-/entries?event={{ $val.UUID }}">🗓️</a>
+            <a href="/-/event?event={{ $val.UUID }}">✏️</a>
+            <a href="#">❌</a>
+        </td>
+    </tr>
+    {{ end }}
+    <!-- <tr>
         <td>Weight Training</td>
         <td>Basics getting back into it training</td>
         <td><a href="/ical/{event_uuid}">https://{sever}/ical/{event_uuid}</a></td>
         <td>
-            <a href="/-/event?event=">✏️</a>
             <a href="/-/entries?event=">🗓️</a>
+            <a href="/-/event?event=">✏️</a>
             <a href="#">❌</a>
         </td>
-    </tr>
+    </tr> -->
 </table>
 
 {{ template "footer.html" . }}

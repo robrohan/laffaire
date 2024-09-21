@@ -17,6 +17,7 @@ type DataRepository struct {
 	upsertEventQuery         *sqlx.Stmt
 	upsertEntryQuery         *sqlx.Stmt
 	getEventsByUserIdQuery   *sqlx.Stmt
+	getEventByIdQuery        *sqlx.Stmt
 	getEntriesByEventIdQuery *sqlx.Stmt
 }
 
@@ -103,6 +104,12 @@ func Attach(schema string, db *sqlx.DB, driver string) *DataRepository {
 		OFFSET $3
 	`, db)
 
+	a.getEventByIdQuery = prepareQuery(`
+		SELECT *
+		FROM event
+		WHERE uuid = $1
+	`, db)
+
 	return &a
 }
 
@@ -166,7 +173,26 @@ func (r *DataRepository) GetUserById(uuid uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *DataRepository) GetEventsByUser(user_uuid uuid.UUID) (*[]models.Event, error) {
+func (r *DataRepository) GetEventById(event_uuid uuid.UUID) (*models.Event, error) {
+	rows, err := r.getEventByIdQuery.Queryx(event_uuid)
+	if err != nil {
+		return nil, err
+	}
+	if rows == nil {
+		return nil, errors.New("no rows")
+	}
+
+	event := models.Event{}
+	for rows.Next() {
+		err = rows.StructScan(&event)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &event, nil
+}
+
+func (r *DataRepository) GetEventsByUserId(user_uuid uuid.UUID) (*[]models.Event, error) {
 	rows, err := r.getEventsByUserIdQuery.Queryx(user_uuid, 100, 0)
 	if err != nil {
 		return nil, err

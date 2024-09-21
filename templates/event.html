@@ -3,18 +3,18 @@
 <h1>Event</h1>
 
 <form action="/-/event" method="POST">
-    <input type="hidden" name="event_uuid">
-    <input type="hidden" name="user_uuid">
+    <input type="hidden" name="event_uuid" value="{{ .Event.UUID }}">
 
     <div class="control">
         <label for="title">Title</label>
-        <input type="text" name="title" id="title" />
+        <input type="text" name="title" id="title" 
+            value="{{ .Event.Title }}"/>
     </div>
 
     <div class="control">
         <label for="description">Description</label>
         <textarea id="description" wrap="soft"
-            name="description"></textarea>
+            name="description">{{ .Event.Description }}</textarea>
     </div>
 
     <div class="control">
