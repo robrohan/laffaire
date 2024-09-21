@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -8,7 +10,9 @@ import (
 	"regexp"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/robrohan/go-web-template/internals/env"
+	"github.com/robrohan/go-web-template/internals/ical"
 	"github.com/robrohan/go-web-template/internals/models"
 )
 
@@ -39,6 +43,10 @@ type entryPageData struct {
 	Entry *models.Entry
 }
 
+type icalPageData struct {
+	Entries *[]models.Entry
+}
+
 func TemplateInit() *template.Template {
 	t, err := template.ParseGlob("./templates/*")
 	if err != nil {
@@ -47,6 +55,43 @@ func TemplateInit() *template.Template {
 	}
 
 	return t
+}
+
+func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		log.Println("vars", vars["id"])
+
+		eventUuid, _ := uuid.Parse(vars["id"])
+		entries, err := env.Repo.GetEntriesByEventId(eventUuid)
+		if err != nil {
+			log.Println("cannot get the event from the db ", err)
+			return
+		}
+
+		log.Println("entries", entries)
+
+		var ics bytes.Buffer
+		log.Printf("creating prolog")
+		ical.Prolog(&ics)
+		for i := 0; i < len(*entries); i++ {
+			e := (*entries)[i]
+			ics.WriteString("BEGIN:VEVENT\r\n")
+			fmt.Fprintf(&ics, "DTSTAMP:%vT000000Z\r\n", e.StartDate)
+			fmt.Fprintf(&ics, "UID:ROHAN-%v\r\n", e.UUID)
+			fmt.Fprintf(&ics, "DTSTART;VALUE=DATE:%v\r\n", e.StartDate)
+			fmt.Fprintf(&ics, "DTEND;VALUE=DATE:%v\r\n", e.EndDate)
+			fmt.Fprintf(&ics, "SUMMARY:%v\r\n", e.Subject)
+			fmt.Fprintf(&ics, "DESCRIPTION:%v\r\n", e.Description)
+			fmt.Fprintf(&ics, "CATEGORIES:%v\r\n", "Plan")
+			ics.WriteString("END:VEVENT\r\n")
+		}
+		log.Printf("writing epilog")
+		ical.Epilog(&ics)
+
+		w.Header().Set("Content-Type", "text/calendar")
+		w.Write(ics.Bytes())
+	}
 }
 
 func EntriesPage(env *env.Env, t *template.Template) http.HandlerFunc {

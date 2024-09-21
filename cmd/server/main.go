@@ -160,7 +160,7 @@ func run() error {
 		router.HandleFunc("/", handlers.ServePage(env, templates))
 		router.HandleFunc("/about", handlers.ServePage(env, templates))
 
-		router.HandleFunc("/ical", handlers.ServePage(env, templates)).Methods("GET")
+		router.HandleFunc("/ical/{id}", handlers.IcalPage(env, templates)).Methods("GET")
 		//////////////////////////
 		// Routes needed for auth
 		router.HandleFunc("/login", handleLogin(env, oauthConfig)).Methods("GET")

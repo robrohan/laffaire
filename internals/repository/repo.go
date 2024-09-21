@@ -101,6 +101,7 @@ func Attach(schema string, db *sqlx.DB, driver string) *DataRepository {
 		SELECT *
 		FROM entry
 		WHERE event_uuid = $1
+		ORDER BY start_date
 		LIMIT $2
 		OFFSET $3
 	`, db)
