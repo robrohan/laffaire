@@ -134,7 +134,7 @@ func (r *DataRepository) UpsertEvent(event *models.Event) error {
 
 func (r *DataRepository) UpsertEntry(entry *models.Entry) error {
 	_, err := r.upsertEntryQuery.Exec(
-		entry.UUID, entry.EntryId, entry.Subject,
+		entry.UUID, entry.EventId, entry.Subject,
 		entry.StartDate, entry.StartTime,
 		entry.EndDate, entry.EndTime,
 		entry.AllDayEvent, entry.Description, entry.Private,

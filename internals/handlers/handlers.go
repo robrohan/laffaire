@@ -30,8 +30,8 @@ func ServePage(env *models.Env, t *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		routeMatch, _ := regexp.Compile(`\/(\w+)`)
 		pd := pageData{
-			"Go Web Template Home",
-			"Go Web Template",
+			"Laffaire Home",
+			"Laffaire",
 			env.User,
 		}
 

@@ -25,7 +25,7 @@ type User struct {
 // Entry is a single item on a calendar
 type Entry struct {
 	UUID        string `db:"uuid"`
-	EntryId     string `db:"entry_uuid"`
+	EventId     string `db:"event_uuid"`
 	Subject     string `db:"subject"`
 	StartDate   string `db:"start_date"`
 	StartTime   string `db:"start_time"`

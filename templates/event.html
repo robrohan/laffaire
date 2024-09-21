@@ -1,0 +1,25 @@
+{{ template "header.html" . }} {{ template "nav_secure.html" . }}
+
+<h1>Event</h1>
+
+<form action="/-/event" method="POST">
+    <input type="hidden" name="event_uuid">
+    <input type="hidden" name="user_uuid">
+
+    <div class="control">
+        <label for="title">Title</label>
+        <input type="text" name="title" id="title" />
+    </div>
+
+    <div class="control">
+        <label for="description">Description</label>
+        <textarea id="description" wrap="soft"
+            name="description"></textarea>
+    </div>
+
+    <div class="control">
+        <input type="submit" value="Submit">
+    </div>
+</form>
+
+{{ template "footer.html" . }}
