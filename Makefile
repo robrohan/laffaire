@@ -53,6 +53,14 @@ docker_run:
 fetch_base_css:
 	curl https://raw.githubusercontent.com/robrohan/pho-ui/main/src/pho-ui.css > templates/pho-ui.css
 
+google:
+	gcloud auth application-default set-quota-project $(PROJECT_ID)
+	gcloud config set project $(PROJECT_ID)
+	gcloud services enable run.googleapis.com
+	gcloud projects add-iam-policy-binding $(PROJECT_ID) \
+		--member=serviceAccount:$(PROJECT_NUMBER)-compute@developer.gserviceaccount.com \
+		--role=roles/cloudbuild.builds.builder
+
 start_db:
 	docker ps ; \
 	docker run --name postgres \
