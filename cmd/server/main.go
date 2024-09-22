@@ -171,7 +171,7 @@ func run() error {
 		secure.HandleFunc("/home", handlers.ServePage(env, templates)).Methods("GET")
 
 		secure.HandleFunc("/events", handlers.EventsPage(env, templates)).Methods("GET")
-		secure.HandleFunc("/event", handlers.EventPage(env, templates)).Methods("GET", "POST")
+		secure.HandleFunc("/event", handlers.EventPage(env, templates)).Methods("GET", "POST", "DELETE")
 
 		secure.HandleFunc("/entries", handlers.EntriesPage(env, templates)).Methods("GET")
 		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST", "DELETE")
