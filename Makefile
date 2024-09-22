@@ -5,7 +5,7 @@ hash = $(shell git log --pretty=format:'%h' -n 1)
 include .env
 export
 
-DOCKER_CONTAINER=go-web-template
+DOCKER_CONTAINER=laffaire
 
 # List all targets in thie file
 list:
@@ -32,7 +32,10 @@ clean:
 
 build: clean
 	mkdir -p build
-	go build -o build/server -ldflags "-X main.build=$(hash)" cmd/server/main.go
+	CGO_ENABLED=1 GOOS=linux \
+		go build -o build/server \
+			-ldflags '-X main.build=$(hash) -linkmode external' \
+			cmd/server/main.go
 	cp -R static build/
 	cp -R templates build/
 	cp -R migrations build/
@@ -42,7 +45,7 @@ docker_build: build
 	docker build -t $(DOCKER_CONTAINER) .
 
 #	Using a different enviroment variable set for prod
-docker_build:
+docker_run:
 	docker ps ; \
 	docker run --env-file=.env.production -p 8080:3000 $(DOCKER_CONTAINER)
 
