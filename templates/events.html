@@ -1,6 +1,6 @@
 {{ template "header.html" . }} {{ template "nav_secure.html" . }}
 
-<h1>Events</h1>
+<h1>Projects</h1>
 
 <a href="/-/event">+New</a>
 
@@ -14,7 +14,7 @@
 
     {{ range $val := .Events }}
     <tr>
-        <td>{{ $val.Title }}</td>
+        <td><a href="/-/entries?event={{ $val.UUID }}">{{ $val.Title }}</a></td>
         <td>{{ $val.Description }}</td>
         <td><a href="/ical/{{ $val.UUID }}">/ical/{{ $val.UUID }}</a></td>
         <td>

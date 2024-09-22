@@ -1,6 +1,6 @@
 {{ template "header.html" . }} {{ template "nav_secure.html" . }}
 
-<h1><a href="/-/events">Events</a> &gt; Entries</h1>
+<h1><a href="/-/events">Projects</a> &gt; Entries</h1>
 
 <a href="/-/entry?event={{.EventUUID}}">+New</a>
 
@@ -21,9 +21,9 @@
         <td>{{ $val.Description }}</td>
         <td>
             <a href="/-/entry?event={{$val.EventId}}&entry={{$val.UUID}}">✏️</a>
-            <div class="entry_delete"
+            <span class="entry_delete"
                 data-eventid="{{$val.EventId}}"
-                data-entryid="{{$val.UUID}}">❌</div>
+                data-entryid="{{$val.UUID}}">❌</span>
         </td>
     </tr>
     {{ end }}
