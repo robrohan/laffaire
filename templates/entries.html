@@ -4,7 +4,7 @@
 
 <a href="/-/entry?event={{.EventUUID}}">+New</a>
 
-<table>
+<table class="fl-table">
     <tr>
         <th>Subject</th>
         <th>Start Date</th>
@@ -21,11 +21,30 @@
         <td>{{ $val.Description }}</td>
         <td>
             <a href="/-/entry?event={{$val.EventId}}&entry={{$val.UUID}}">✏️</a>
-            <a href="#">❌</a>
+            <div class="entry_delete"
+                data-eventid="{{$val.EventId}}"
+                data-entryid="{{$val.UUID}}">❌</div>
         </td>
     </tr>
     {{ end }}
 </table>
 
+<script>
+    const delButtons = document.querySelectorAll(".entry_delete");
+    for (let i = 0; i < delButtons.length; ++i) {
+        delButtons[i].addEventListener("click", e => {
+            const evid = e.target.getAttribute("data-eventid");
+            const enid = e.target.getAttribute("data-entryid");
+
+            if (confirm("Are you sure?") == true) {
+                fetch(`/-/entry?event=${evid}&entry=${enid}`, {
+                    method: "DELETE"
+                }).then(e => {
+                    document.location = e.url;
+                });
+            }
+        });
+    }
+</script>
 
 {{ template "footer.html" . }}

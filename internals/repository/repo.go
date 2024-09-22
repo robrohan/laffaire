@@ -16,6 +16,7 @@ type DataRepository struct {
 	getUserByIdQuery         *sqlx.Stmt
 	upsertEventQuery         *sqlx.Stmt
 	upsertEntryQuery         *sqlx.Stmt
+	deleteEntryQuery         *sqlx.Stmt
 	getEventsByUserIdQuery   *sqlx.Stmt
 	getEventByIdQuery        *sqlx.Stmt
 	getEntriesByEventIdQuery *sqlx.Stmt
@@ -62,6 +63,12 @@ func Attach(schema string, db *sqlx.DB, driver string) *DataRepository {
 		ON CONFLICT (uuid) DO UPDATE
 			SET title = $3,
 			description = $4;
+	`, db)
+
+	a.deleteEntryQuery = prepareQuery(`
+		DELETE FROM entry
+		WHERE uuid = $1
+		AND event_uuid = $2
 	`, db)
 
 	a.upsertEntryQuery = prepareQuery(`
@@ -158,6 +165,14 @@ func (r *DataRepository) UpsertEntry(entry *models.Entry) error {
 		return err
 	}
 
+	return nil
+}
+
+func (r *DataRepository) DeleteEntry(entryUuid string, eventUuid string) error {
+	_, err := r.deleteEntryQuery.Exec(entryUuid, eventUuid)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

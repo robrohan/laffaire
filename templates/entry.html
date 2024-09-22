@@ -16,8 +16,7 @@
     <div class="control">
         <label for="start_date">Start Date</label>
         <input type="date" id="start_date" name="start_date" 
-        value="{{ .Entry.StartDate }}"
-        />
+        value="{{ .Entry.StartDate }}" />
     </div>
 
     <div class="control">
@@ -30,6 +29,7 @@
     <div class="control">
         <label for="end_date">End Date</label>
         <input type="date" id="end_date" name="end_date" 
+        min="{{ .Entry.StartDate }}"
         value="{{ .Entry.EndDate }}"
         />
     </div>
@@ -77,5 +77,14 @@
         <input type="submit" value="Submit">
     </div>
 </form>
+
+<script>
+    const startDate = document.querySelector('#start_date');
+    const endDate = document.querySelector('#end_date');
+
+    startDate.addEventListener("change", (e) => {
+        endDate.setAttribute('min', e.target.value);
+    });
+</script>
 
 {{ template "footer.html" . }}

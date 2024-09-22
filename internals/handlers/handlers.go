@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -43,10 +45,6 @@ type entryPageData struct {
 	Entry *models.Entry
 }
 
-type icalPageData struct {
-	Entries *[]models.Entry
-}
-
 func TemplateInit() *template.Template {
 	t, err := template.ParseGlob("./templates/*")
 	if err != nil {
@@ -55,6 +53,20 @@ func TemplateInit() *template.Template {
 	}
 
 	return t
+}
+
+func createDateTime(date string, time string) string {
+	if date == "" {
+		return ""
+	}
+	date = strings.Replace(date, "-", "", -1)
+	if time != "" {
+		time = strings.Replace(time, ":", "", -1)
+		date = date + "T" + time + "00Z"
+	} else {
+		date = date + "T000000Z"
+	}
+	return date
 }
 
 func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
@@ -71,20 +83,33 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 
 		log.Println("entries", entries)
 
+		calendarName := "Plan"
 		var ics bytes.Buffer
 		log.Printf("creating prolog")
-		ical.Prolog(&ics)
+		ical.Prolog(&ics, calendarName, "//Rob Rohan//Made up go code//EN", "NZDT")
 		for i := 0; i < len(*entries); i++ {
 			e := (*entries)[i]
-			ics.WriteString("BEGIN:VEVENT\r\n")
-			fmt.Fprintf(&ics, "DTSTAMP:%vT000000Z\r\n", e.StartDate)
-			fmt.Fprintf(&ics, "UID:ROHAN-%v\r\n", e.UUID)
-			fmt.Fprintf(&ics, "DTSTART;VALUE=DATE:%v\r\n", e.StartDate)
-			fmt.Fprintf(&ics, "DTEND;VALUE=DATE:%v\r\n", e.EndDate)
-			fmt.Fprintf(&ics, "SUMMARY:%v\r\n", e.Subject)
-			fmt.Fprintf(&ics, "DESCRIPTION:%v\r\n", e.Description)
-			fmt.Fprintf(&ics, "CATEGORIES:%v\r\n", "Plan")
-			ics.WriteString("END:VEVENT\r\n")
+
+			start := createDateTime(e.StartDate, e.StartTime)
+			end := createDateTime(e.EndDate, e.EndTime)
+			calid := strings.Split(e.UUID, "-")[0]
+			timestamp := time.Unix(time.Now().Unix(), 0)
+
+			if end == "" {
+				end = start
+			}
+
+			if start != "" {
+				ics.WriteString("BEGIN:VEVENT\r\n")
+				fmt.Fprintf(&ics, "DTSTAMP:%v\r\n", start)
+				fmt.Fprintf(&ics, "UID:R-%v-%v\r\n", calid, timestamp)
+				fmt.Fprintf(&ics, "DTSTART;VALUE=DATE:%v\r\n", start)
+				fmt.Fprintf(&ics, "DTEND;VALUE=DATE:%v\r\n", end)
+				fmt.Fprintf(&ics, "SUMMARY:%v\r\n", e.Subject)
+				fmt.Fprintf(&ics, "DESCRIPTION:%v\r\n", e.Description)
+				fmt.Fprintf(&ics, "CATEGORIES:%v\r\n", calendarName)
+				ics.WriteString("END:VEVENT\r\n")
+			}
 		}
 		log.Printf("writing epilog")
 		ical.Epilog(&ics)
@@ -196,6 +221,22 @@ func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
 				}
 				pd.Entry = &entry
 			}
+		case "DELETE":
+			log.Println("delete")
+			entryUuid := r.URL.Query().Get("entry")
+			eventUuid := r.URL.Query().Get("event")
+			log.Println(entryUuid, eventUuid)
+
+			err := env.Repo.DeleteEntry(entryUuid, eventUuid)
+			if err != nil {
+				log.Println("cannot delete the entry from the db ", err)
+				return
+			}
+
+			log.Println("what?")
+
+			http.Redirect(w, r, "/-/entries?event="+eventUuid, http.StatusTemporaryRedirect)
+			return
 		}
 
 		if t.Lookup(page) != nil {

@@ -174,7 +174,7 @@ func run() error {
 		secure.HandleFunc("/event", handlers.EventPage(env, templates)).Methods("GET", "POST")
 
 		secure.HandleFunc("/entries", handlers.EntriesPage(env, templates)).Methods("GET")
-		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST")
+		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST", "DELETE")
 	}
 
 	api := http.Server{
