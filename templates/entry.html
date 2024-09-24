@@ -2,6 +2,7 @@
 
 <h1>Entry</h1>
 
+<section class="content">
 <form action="/-/entry" method="POST">
     <input type="hidden" name="event_uuid" value="{{ .Entry.EventId }}">
     <input type="hidden" name="entry_uuid" value="{{ .Entry.UUID }}">
@@ -77,6 +78,7 @@
         <input type="submit" value="Submit">
     </div>
 </form>
+</section>
 
 <script>
     const startDate = document.querySelector('#start_date');

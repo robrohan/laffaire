@@ -4,26 +4,30 @@
 
 <a href="/-/event">+New</a>
 
-<table class="fl-table">
-    <tr>
-        <th>Title</th>
-        <th>Description</th>
-        <th>Link</th>
-        <th>&nbsp;</th>
-    </tr>
+<section class="content">
+    <table class="fl-table">
+        <thead>
+        <tr>
+            <th width="40%">Title</th>
+            <th width="40%">Description</th>
+            <th width="20%">&nbsp;</th>
+        </tr>
+        </thead>
 
-    {{ range $val := .Events }}
-    <tr>
-        <td><a href="/-/entries?event={{ $val.UUID }}">{{ $val.Title }}</a></td>
-        <td>{{ $val.Description }}</td>
-        <td><a href="/ical/{{ $val.UUID }}">/ical/{{ $val.UUID }}</a></td>
-        <td>
-            <a href="/-/entries?event={{ $val.UUID }}">🗓️</a>
-            <a href="/-/event?event={{ $val.UUID }}">✏️</a>
-            <a href="#">❌</a>
-        </td>
-    </tr>
-    {{ end }}
-</table>
+        <tbody>
+        {{ range $val := .Events }}
+        <tr>
+            <td><a href="/ical/{{ $val.UUID }}">{{ $val.Title }}</a></td>
+            <td>{{ $val.Description }}</td>
+            <td class="table-control">
+                <a href="/-/entries?event={{ $val.UUID }}">📑</a>
+                <a href="/-/event?event={{ $val.UUID }}">🖋️</a>
+                <a href="#">❌</a>
+            </td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+</section>
 
 {{ template "footer.html" . }}

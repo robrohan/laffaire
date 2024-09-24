@@ -4,30 +4,36 @@
 
 <a href="/-/entry?event={{.EventUUID}}">+New</a>
 
+<section class="content">
 <table class="fl-table">
+    <thead>
     <tr>
-        <th>Subject</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Description</th>
-        <th>&nbsp;</th>
+        <th width="40%">Subject</th>
+        <!-- <th>Start Date</th>
+        <th>End Date</th> -->
+        <th width="40%">Description</th>
+        <th width="20%">&nbsp;</th>
     </tr>
+    </thead>
 
+    <tbody>
     {{ range $val := .Entries }}
     <tr>
         <td>{{ $val.Subject }}</td>
-        <td>{{ $val.StartDate }}</td>
-        <td>{{ $val.EndDate }}</td>
+        <!-- <td>{{ $val.StartDate }}</td>
+        <td>{{ $val.EndDate }}</td> -->
         <td>{{ $val.Description }}</td>
-        <td>
-            <a href="/-/entry?event={{$val.EventId}}&entry={{$val.UUID}}">✏️</a>
+        <td class="table-control">
+            <a href="/-/entry?event={{$val.EventId}}&entry={{$val.UUID}}">🖋️</a>
             <span class="entry_delete"
                 data-eventid="{{$val.EventId}}"
                 data-entryid="{{$val.UUID}}">❌</span>
         </td>
     </tr>
     {{ end }}
+    </tbody>
 </table>
+</section>
 
 <script>
     const delButtons = document.querySelectorAll(".entry_delete");

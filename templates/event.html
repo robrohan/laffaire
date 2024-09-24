@@ -2,6 +2,7 @@
 
 <h1>Event</h1>
 
+<section class="content">
 <form action="/-/event" method="POST">
     <input type="hidden" name="event_uuid" value="{{ .Event.UUID }}">
 
@@ -21,5 +22,6 @@
         <input type="submit" value="Submit">
     </div>
 </form>
+</section>
 
 {{ template "footer.html" . }}

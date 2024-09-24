@@ -27,6 +27,11 @@ test:
 start:
 	go run cmd/server/main.go
 
+watch:
+#	If you want "hot reloading"
+#	sudo apt install entr
+	find ./ | entr -sr 'go run cmd/server/main.go'
+
 clean:
 	rm -rf build
 
