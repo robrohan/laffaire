@@ -1,11 +1,12 @@
 .PHONY: build clean test
 
-hash = $(shell git log --pretty=format:'%h' -n 1)
+HASH=$(shell git log --pretty=format:'%h' -n 1)
 
 include .env
 export
 
-DOCKER_CONTAINER=laffaire
+# DOCKER_CONTAINER=$(REGION)-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/$(PROJECT)
+DOCKER_CONTAINER=$(REPOSITORY)/$(PROJECT)
 
 # List all targets in thie file
 list:
@@ -39,7 +40,7 @@ build: clean
 	mkdir -p build
 	CGO_ENABLED=1 GOOS=linux \
 		go build -o build/server \
-			-ldflags '-X main.build=$(hash) -linkmode external' \
+			-ldflags '-X main.build=$(HASH) -linkmode external' \
 			cmd/server/main.go
 	cp -R static build/
 	cp -R templates build/
@@ -47,12 +48,16 @@ build: clean
 
 docker_build: build
 	docker ps ; \
-	docker build -t $(DOCKER_CONTAINER) .
+	docker build -t $(DOCKER_CONTAINER):$(HASH) .
+
+docker_push:
+	docker ps ; \
+	docker push $(DOCKER_CONTAINER):$(HASH)
 
 #	Using a different enviroment variable set for prod
 docker_run:
 	docker ps ; \
-	docker run --env-file=.env.production -p 8080:3000 $(DOCKER_CONTAINER)
+	docker run --env-file=.env.production -p 8080:3000 $(DOCKER_CONTAINER):$(HASH)
 
 #	Grab a base css that styles form elements with some basic style
 fetch_base_css:
