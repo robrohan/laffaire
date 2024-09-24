@@ -26,7 +26,7 @@ type Config struct {
 		AccessTokenURL string   `conf:"default:https://www.googleapis.com/oauth2/v2/userinfo?access_token="`
 	}
 	DB struct {
-		Driver     string `conf:"default:postgres"`
-		Connection string `conf:"default:host=db port=5432 user=postgres dbname=postgres password=postgres sslmode=disable,noprint"`
+		Driver     string `conf:"default:sqlite3"`
+		Connection string `conf:"default:datastore/main.db"`
 	}
 }
