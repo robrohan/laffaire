@@ -45,6 +45,7 @@ build: clean
 	cp -R static build/
 	cp -R templates build/
 	cp -R migrations build/
+	cp -R datastore build/
 
 docker_build: build
 	docker ps ; \

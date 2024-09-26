@@ -27,6 +27,6 @@ type Config struct {
 	}
 	DB struct {
 		Driver     string `conf:"default:sqlite3"`
-		Connection string `conf:"default:datastore/main.db"`
+		Connection string `conf:"default:./datastore/main.db"`
 	}
 }
