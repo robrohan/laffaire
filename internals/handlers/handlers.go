@@ -93,7 +93,7 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 			start := createDateTime(e.StartDate, e.StartTime)
 			end := createDateTime(e.EndDate, e.EndTime)
 			calid := strings.Split(e.UUID, "-")[0]
-			timestamp := time.Unix(time.Now().Unix(), 0)
+			timestamp := int32(time.Now().Unix())
 
 			if end == "" {
 				end = start
