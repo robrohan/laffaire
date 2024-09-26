@@ -40,7 +40,7 @@ build: clean
 	mkdir -p build
 	CGO_ENABLED=1 GOOS=linux \
 		go build -o build/server \
-			-ldflags '-X main.build=$(HASH) -linkmode external' \
+			-ldflags '-X main.build=$(HASH)' \
 			cmd/server/main.go
 	cp -R static build/
 	cp -R templates build/

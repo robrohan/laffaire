@@ -23,10 +23,10 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
-	"github.com/robrohan/go-web-template/internals/env"
-	"github.com/robrohan/go-web-template/internals/handlers"
-	"github.com/robrohan/go-web-template/internals/models"
-	"github.com/robrohan/go-web-template/internals/repository"
+	"github.com/robrohan/laffaire/internals/env"
+	"github.com/robrohan/laffaire/internals/handlers"
+	"github.com/robrohan/laffaire/internals/models"
+	"github.com/robrohan/laffaire/internals/repository"
 	"golang.org/x/oauth2"
 )
 

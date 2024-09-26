@@ -13,9 +13,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/robrohan/go-web-template/internals/env"
-	"github.com/robrohan/go-web-template/internals/ical"
-	"github.com/robrohan/go-web-template/internals/models"
+	"github.com/robrohan/laffaire/internals/env"
+	"github.com/robrohan/laffaire/internals/ical"
+	"github.com/robrohan/laffaire/internals/models"
 )
 
 type pageData struct {

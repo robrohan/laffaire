@@ -1,4 +1,4 @@
-module github.com/robrohan/go-web-template
+module github.com/robrohan/laffaire
 
 go 1.18
 
