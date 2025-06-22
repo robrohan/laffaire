@@ -10,6 +10,7 @@ DOCKER_CONTAINER=$(REPOSITORY)/$(PROJECT)
 
 # List all targets in thie file
 list:
+	@echo $(HASH)
 	@echo ""
 	@echo "*^-. Go App Template .-^*"
 	@echo ""
@@ -38,8 +39,7 @@ clean:
 
 build: clean
 	mkdir -p build
-#	export CC=aarch64-linux-musl-gcc
-	CC=x86_64-linux-musl-gcc \
+#	CC=/opt/homebrew/bin/x86_64-linux-musl-gcc \
 	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
 		go build -o build/server \
 			-ldflags '-X main.build=$(HASH)' \
@@ -50,8 +50,9 @@ build: clean
 	cp -R datastore build/
 
 docker_build: build
-	docker ps ; \
-	docker build -t $(DOCKER_CONTAINER):$(HASH) .
+	# docker ps ; \
+	# docker build -t $(DOCKER_CONTAINER):$(HASH) .
+	docker buildx build --platform linux/amd64 -t $(DOCKER_CONTAINER):$(HASH) .
 
 docker_push:
 	docker ps ; \
