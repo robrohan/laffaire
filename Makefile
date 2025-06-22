@@ -39,17 +39,17 @@ clean:
 
 build: clean
 	mkdir -p build
-#	CC=/opt/homebrew/bin/x86_64-linux-musl-gcc \
+#	CC=/opt/homebrew/bin/x86_64-linux-musl-gcc
 	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-		go build -o build/server \
-			-ldflags '-X main.build=$(HASH)' \
-			cmd/server/main.go
+	go build -o build/server \
+		-ldflags '-X main.build=$(HASH)' \
+		cmd/server/main.go
 	cp -R static build/
 	cp -R templates build/
 	cp -R migrations build/
 	cp -R datastore build/
 
-docker_build: build
+docker_build:
 	# docker ps ; \
 	# docker build -t $(DOCKER_CONTAINER):$(HASH) .
 	docker buildx build --platform linux/amd64 -t $(DOCKER_CONTAINER):$(HASH) .
