@@ -38,7 +38,9 @@ clean:
 
 build: clean
 	mkdir -p build
-	CGO_ENABLED=1 GOOS=linux \
+#	export CC=aarch64-linux-musl-gcc
+	CC=x86_64-linux-musl-gcc \
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
 		go build -o build/server \
 			-ldflags '-X main.build=$(HASH)' \
 			cmd/server/main.go
