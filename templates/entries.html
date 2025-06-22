@@ -8,9 +8,9 @@
 <table class="fl-table">
     <thead>
     <tr>
-        <th width="40%">Subject</th>
-        <!-- <th>Start Date</th>
-        <th>End Date</th> -->
+        <th width="10%">Start Date</th>
+        <th width="30%">Subject</th>
+        <!-- <th>End Date</th> -->
         <th width="40%">Description</th>
         <th width="20%">&nbsp;</th>
     </tr>
@@ -19,9 +19,9 @@
     <tbody>
     {{ range $val := .Entries }}
     <tr>
-        <td>{{ $val.Subject }}</td>
-        <!-- <td>{{ $val.StartDate }}</td>
-        <td>{{ $val.EndDate }}</td> -->
+        <td>{{ $val.StartDate }}</td>
+        <td><a href="/-/entry?event={{$val.EventId}}&entry={{$val.UUID}}">{{ $val.Subject }}</a></td>
+        <!-- <td>{{ $val.EndDate }}</td> -->
         <td>{{ $val.Description }}</td>
         <td class="table-control">
             <a href="/-/entry?event={{$val.EventId}}&entry={{$val.UUID}}">🖋️</a>

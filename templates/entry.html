@@ -60,7 +60,7 @@
     <div class="control">
         <label for="location">Location</label>
         <input type="text" name="location" id="location" 
-        value="{{ .Entry.Location }}"
+	        value="{{ .Entry.Location }}"
         />
     </div>
 
@@ -75,6 +75,7 @@
     </div>
 
     <div class="control">
+        <input type="button" value="Cancel" onclick="javascript:history.go(-1);">
         <input type="submit" value="Submit">
     </div>
 </form>

@@ -8,8 +8,8 @@
     <table class="fl-table">
         <thead>
         <tr>
-            <th width="40%">Title</th>
-            <th width="40%">Description</th>
+            <th width="30%">Title</th>
+            <th width="50%">Description</th>
             <th width="20%">&nbsp;</th>
         </tr>
         </thead>
@@ -17,17 +17,37 @@
         <tbody>
         {{ range $val := .Events }}
         <tr>
-            <td><a href="/ical/{{ $val.UUID }}">{{ $val.Title }}</a></td>
+            <td><a href="/-/entries?event={{ $val.UUID }}" >{{ $val.Title }}</a></td>
             <td>{{ $val.Description }}</td>
             <td class="table-control">
-                <a href="/-/entries?event={{ $val.UUID }}">📑</a>
+                <a href="/ical/{{ $val.UUID }}">📆</a>
                 <a href="/-/event?event={{ $val.UUID }}">🖋️</a>
-                <a href="#">❌</a>
+                <!-- <a href="#">❌</a> -->
+                <span class="event_delete"
+	                data-eventid="{{$val.UUID}}">❌</span>
             </td>
         </tr>
         {{ end }}
         </tbody>
     </table>
 </section>
+
+
+<script>
+    const delButtons = document.querySelectorAll(".event_delete");
+    for (let i = 0; i < delButtons.length; ++i) {
+        delButtons[i].addEventListener("click", e => {
+            const evid = e.target.getAttribute("data-eventid");
+            if (confirm("Are you sure?") == true) {
+                fetch(`/-/event?event=${evid}`, {
+                    method: "DELETE"
+                }).then(e => {
+                    document.location = e.url;
+                });
+            }
+        });
+    }
+</script>
+
 
 {{ template "footer.html" . }}

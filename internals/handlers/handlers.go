@@ -222,7 +222,7 @@ func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
 				pd.Entry = &entry
 			}
 		case "DELETE":
-			log.Println("delete")
+			log.Println("delete entry")
 			entryUuid := r.URL.Query().Get("entry")
 			eventUuid := r.URL.Query().Get("event")
 			log.Println(entryUuid, eventUuid)
@@ -232,9 +232,6 @@ func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
 				log.Println("cannot delete the entry from the db ", err)
 				return
 			}
-
-			log.Println("what?")
-
 			http.Redirect(w, r, "/-/entries?event="+eventUuid, http.StatusTemporaryRedirect)
 			return
 		}
