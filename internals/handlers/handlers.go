@@ -62,9 +62,9 @@ func createDateTime(date string, time string) string {
 	date = strings.Replace(date, "-", "", -1)
 	if time != "" {
 		time = strings.Replace(time, ":", "", -1)
-		date = date + "T" + time + "00Z"
+		date = date + "T" + time + "00"
 	} else {
-		date = date + "T000000Z"
+		date = date + "T000000"
 	}
 	return date
 }
