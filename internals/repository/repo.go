@@ -22,6 +22,10 @@ type DataRepository struct {
 	getEventByIdQuery        *sqlx.Stmt
 	getEntriesByEventIdQuery *sqlx.Stmt
 	getEntryByIdQuery        *sqlx.Stmt
+	createTokenQuery         *sqlx.Stmt
+	getTokensByUserIdQuery   *sqlx.Stmt
+	deleteTokenQuery         *sqlx.Stmt
+	getUserByTokenQuery      *sqlx.Stmt
 }
 
 func prepareQuery(query string, db *sqlx.DB) *sqlx.Stmt {
@@ -130,6 +134,32 @@ func Attach(schema string, db *sqlx.DB, driver string) *DataRepository {
 		SELECT *
 		FROM entry
 		WHERE uuid = $1
+	`, db)
+
+	a.createTokenQuery = prepareQuery(`
+		INSERT INTO token (uuid, user_uuid, name, token, created_at)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (uuid) DO NOTHING
+	`, db)
+
+	a.getTokensByUserIdQuery = prepareQuery(`
+		SELECT uuid, user_uuid, name, token, created_at
+		FROM token
+		WHERE user_uuid = $1
+		ORDER BY created_at DESC
+	`, db)
+
+	a.deleteTokenQuery = prepareQuery(`
+		DELETE FROM token
+		WHERE uuid = $1
+		AND user_uuid = $2
+	`, db)
+
+	a.getUserByTokenQuery = prepareQuery(`
+		SELECT u.uuid, u.email, u.username, u.picture, u.authid, u.salt
+		FROM users u
+		JOIN token t ON u.uuid = t.user_uuid
+		WHERE t.token = $1
 	`, db)
 
 	return &a
@@ -290,6 +320,51 @@ func (r *DataRepository) GetEntriesByEventId(event_uuid uuid.UUID) (*[]models.En
 		entries = append(entries, entry)
 	}
 	return &entries, nil
+}
+
+func (r *DataRepository) CreateToken(token *models.Token) error {
+	_, err := r.createTokenQuery.Exec(
+		token.UUID, token.UserId, token.Name, token.Token, token.CreatedAt,
+	)
+	return err
+}
+
+func (r *DataRepository) GetTokensByUserId(userUuid uuid.UUID) (*[]models.Token, error) {
+	rows, err := r.getTokensByUserIdQuery.Queryx(userUuid)
+	if err != nil {
+		return nil, err
+	}
+	tokens := make([]models.Token, 0)
+	for rows.Next() {
+		t := models.Token{}
+		if err = rows.StructScan(&t); err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, t)
+	}
+	return &tokens, nil
+}
+
+func (r *DataRepository) DeleteToken(tokenUuid string, userUuid string) error {
+	_, err := r.deleteTokenQuery.Exec(tokenUuid, userUuid)
+	return err
+}
+
+func (r *DataRepository) GetUserByToken(tokenValue string) (*models.User, error) {
+	rows, err := r.getUserByTokenQuery.Queryx(tokenValue)
+	if err != nil {
+		return nil, err
+	}
+	user := models.User{}
+	for rows.Next() {
+		if err = rows.StructScan(&user); err != nil {
+			return nil, err
+		}
+	}
+	if user.UUID == "" {
+		return nil, errors.New("token not found")
+	}
+	return &user, nil
 }
 
 func (r *DataRepository) GetUser(email string) (*models.User, error) {
