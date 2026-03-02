@@ -175,6 +175,23 @@ func run() error {
 
 		secure.HandleFunc("/entries", handlers.EntriesPage(env, templates)).Methods("GET")
 		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST", "DELETE")
+
+		/////////////////////////
+		// JSON API v1 — returns 401 JSON on auth failure (no redirect)
+		api := router.PathPrefix("/api/v1").Subrouter()
+		api.Use(APILoginVerify(env, repo))
+
+		api.HandleFunc("/events", handlers.APIGetEvents(env)).Methods("GET")
+		api.HandleFunc("/events", handlers.APICreateEvent(env)).Methods("POST")
+		api.HandleFunc("/events/{id}", handlers.APIGetEvent(env)).Methods("GET")
+		api.HandleFunc("/events/{id}", handlers.APIUpdateEvent(env)).Methods("PUT")
+		api.HandleFunc("/events/{id}", handlers.APIDeleteEvent(env)).Methods("DELETE")
+
+		api.HandleFunc("/events/{id}/entries", handlers.APIGetEntries(env)).Methods("GET")
+		api.HandleFunc("/entries", handlers.APICreateEntry(env)).Methods("POST")
+		api.HandleFunc("/entries/{id}", handlers.APIGetEntry(env)).Methods("GET")
+		api.HandleFunc("/entries/{id}", handlers.APIUpdateEntry(env)).Methods("PUT")
+		api.HandleFunc("/entries/{id}", handlers.APIDeleteEntry(env)).Methods("DELETE")
 	}
 
 	api := http.Server{
@@ -299,6 +316,49 @@ func addCookie(w http.ResponseWriter, name, value string, ttl time.Duration) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, &cookie)
+}
+
+func APILoginVerify(env *env.Env, repo *repository.DataRepository) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cookie, err := r.Cookie(cookieName)
+			if err != nil || cookie.Value == "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error":"unauthorized"}`))
+				return
+			}
+
+			parts := strings.Split(cookie.Value, ":")
+			uuid, err := uuid.Parse(parts[0])
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error":"unauthorized"}`))
+				return
+			}
+
+			user, err := repo.GetUserById(uuid)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error":"unauthorized"}`))
+				return
+			}
+
+			hashString := fmt.Sprintf("%s%s%s", user.Email, user.AuthId, *user.Salt)
+			hash := md5.Sum([]byte(hashString))
+			if fmt.Sprintf("%x", hash) != parts[1] {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error":"unauthorized"}`))
+				return
+			}
+
+			env.User = user
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func LoginVerify(env *env.Env, repo *repository.DataRepository) mux.MiddlewareFunc {
