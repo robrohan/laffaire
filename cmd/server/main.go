@@ -176,6 +176,9 @@ func run() error {
 		secure.HandleFunc("/entries", handlers.EntriesPage(env, templates)).Methods("GET")
 		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST", "DELETE")
 
+		secure.HandleFunc("/tokens", handlers.TokensPage(env, templates)).Methods("GET", "DELETE")
+		secure.HandleFunc("/token", handlers.TokenPage(env, templates)).Methods("GET", "POST")
+
 		/////////////////////////
 		// JSON API v1 — returns 401 JSON on auth failure (no redirect)
 		api := router.PathPrefix("/api/v1").Subrouter()
