@@ -175,6 +175,26 @@ func run() error {
 
 		secure.HandleFunc("/entries", handlers.EntriesPage(env, templates)).Methods("GET")
 		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST", "DELETE")
+
+		secure.HandleFunc("/tokens", handlers.TokensPage(env, templates)).Methods("GET", "DELETE")
+		secure.HandleFunc("/token", handlers.TokenPage(env, templates)).Methods("GET", "POST")
+
+		/////////////////////////
+		// JSON API v1 — returns 401 JSON on auth failure (no redirect)
+		api := router.PathPrefix("/api/v1").Subrouter()
+		api.Use(APILoginVerify(env, repo))
+
+		api.HandleFunc("/events", handlers.APIGetEvents(env)).Methods("GET")
+		api.HandleFunc("/events", handlers.APICreateEvent(env)).Methods("POST")
+		api.HandleFunc("/events/{id}", handlers.APIGetEvent(env)).Methods("GET")
+		api.HandleFunc("/events/{id}", handlers.APIUpdateEvent(env)).Methods("PUT")
+		api.HandleFunc("/events/{id}", handlers.APIDeleteEvent(env)).Methods("DELETE")
+
+		api.HandleFunc("/events/{id}/entries", handlers.APIGetEntries(env)).Methods("GET")
+		api.HandleFunc("/entries", handlers.APICreateEntry(env)).Methods("POST")
+		api.HandleFunc("/entries/{id}", handlers.APIGetEntry(env)).Methods("GET")
+		api.HandleFunc("/entries/{id}", handlers.APIUpdateEntry(env)).Methods("PUT")
+		api.HandleFunc("/entries/{id}", handlers.APIDeleteEntry(env)).Methods("DELETE")
 	}
 
 	api := http.Server{
@@ -299,6 +319,64 @@ func addCookie(w http.ResponseWriter, name, value string, ttl time.Duration) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, &cookie)
+}
+
+func apiUnauthorized(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte(`{"error":"unauthorized"}`))
+}
+
+func APILoginVerify(env *env.Env, repo *repository.DataRepository) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Bearer token takes priority — allows API clients to authenticate
+			// without a browser session. The HTML UI is unaffected: it uses the
+			// separate LoginVerify middleware on the /-/ subrouter.
+			if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+				tokenValue := strings.TrimPrefix(auth, "Bearer ")
+				user, err := repo.GetUserByToken(tokenValue)
+				if err != nil {
+					env.Log.Error("bearer token not found", "error", err)
+					apiUnauthorized(w)
+					return
+				}
+				env.User = user
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Fall back to the session cookie set by the browser OAuth login.
+			cookie, err := r.Cookie(cookieName)
+			if err != nil || cookie.Value == "" {
+				apiUnauthorized(w)
+				return
+			}
+
+			parts := strings.Split(cookie.Value, ":")
+			uid, err := uuid.Parse(parts[0])
+			if err != nil {
+				apiUnauthorized(w)
+				return
+			}
+
+			user, err := repo.GetUserById(uid)
+			if err != nil {
+				apiUnauthorized(w)
+				return
+			}
+
+			hashString := fmt.Sprintf("%s%s%s", user.Email, user.AuthId, *user.Salt)
+			hash := md5.Sum([]byte(hashString))
+			if fmt.Sprintf("%x", hash) != parts[1] {
+				apiUnauthorized(w)
+				return
+			}
+
+			env.User = user
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func LoginVerify(env *env.Env, repo *repository.DataRepository) mux.MiddlewareFunc {

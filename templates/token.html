@@ -1,0 +1,48 @@
+{{ template "header.html" . }} {{ template "nav_secure.html" . }}
+
+{{ if .NewToken }}
+
+<h1>Token Created</h1>
+
+<section class="content">
+    <p>Your new API token is shown below. Copy it now and store it somewhere safe.</p>
+
+    <div class="control">
+        <label for="token_value">Token</label>
+        <input type="text" id="token_value" value="{{ .NewToken.Token }}" readonly
+            onclick="this.select()" />
+    </div>
+
+    <div class="control">
+        <label>Example usage</label>
+        <input type="text" value='curl -H "Authorization: Bearer {{ .NewToken.Token }}" /api/v1/events' readonly
+            onclick="this.select()" />
+    </div>
+
+    <div class="control">
+        <a href="/-/tokens">Back to tokens</a>
+    </div>
+</section>
+
+{{ else }}
+
+<h1>New API Token</h1>
+
+<section class="content">
+<form action="/-/token" method="POST">
+    <div class="control">
+        <label for="name">Token Name</label>
+        <input type="text" name="name" id="name"
+            placeholder="e.g. My Mobile App" required />
+    </div>
+
+    <div class="control">
+        <input type="button" value="Cancel" onclick="javascript:history.go(-1);">
+        <input type="submit" value="Create Token">
+    </div>
+</form>
+</section>
+
+{{ end }}
+
+{{ template "footer.html" . }}
