@@ -133,6 +133,71 @@ A separate `APILoginVerify` middleware handles this cleanly.
 
 ---
 
+## Testing
+
+Test file: `internals/handlers/api_test.go` (package `handlers_test`)
+Run all tests: `go test ./...`
+
+### Test DB setup
+Use an in-memory SQLite with `migrate.MemoryMigrationSource` — avoids needing the
+`migrations/` directory on disk when running tests from a sub-package.
+
+```go
+func newTestDB(t *testing.T) *sqlx.DB {
+    db, _ := sqlx.Open("sqlite3", ":memory:")
+    src := &migrate.MemoryMigrationSource{
+        Migrations: []*migrate.Migration{
+            {Id: "000000", Up: []string{`CREATE TABLE IF NOT EXISTS users (...)`}},
+            {Id: "000001", Up: []string{`CREATE TABLE IF NOT EXISTS event (...)`,
+                                        `CREATE TABLE IF NOT EXISTS entry (...)`}},
+        },
+    }
+    migrate.Exec(db.DB, "sqlite3", src, migrate.Up)
+    t.Cleanup(func() { db.Close() })
+    return db
+}
+```
+
+### Auth in tests
+Auth middleware (`APILoginVerify`) lives in `main.go` and is not used in handler tests.
+Instead, set `env.User` directly on the `*env.Env` before making requests. This mirrors
+exactly what the middleware does in production.
+
+```go
+e := &env.Env{..., User: &models.User{UUID: testUserUUID}}
+```
+
+To test ownership (403) cases, create a second env with a different UUID and a separate
+router pointing at the same DB:
+
+```go
+otherE := newTestEnv(t, db, otherUserUUID)
+otherRouter := apiRouter(otherE)
+```
+
+### Test structure
+- One `*sqlx.DB` per top-level test function (`TestAPIEvents`, `TestAPIEntries`)
+- Sub-tests run **sequentially** (no `t.Parallel()`) and share state — later sub-tests
+  depend on IDs captured by earlier ones (e.g. create → get → update → delete)
+- Use `httptest.NewRecorder()` + `router.ServeHTTP()` — no real HTTP server needed
+
+### Helper functions
+| Helper | Purpose |
+|---|---|
+| `newTestDB(t)` | In-memory SQLite with migrations applied |
+| `newTestEnv(t, db, userUUID)` | `*env.Env` with real repo, silenced logger, set user |
+| `apiRouter(e)` | Mux router wired with all `/api/v1/` routes |
+| `do(t, router, method, path, body)` | Fire a request, return `*httptest.ResponseRecorder` |
+| `mustDecode[T](t, body)` | Generic JSON decode helper, fails test on error |
+
+### What to test per endpoint
+- Happy path (correct status code + response body fields)
+- Validation errors (missing required fields → 400, invalid UUID → 400)
+- Ownership enforcement (other user's resource → 403)
+- State changes are visible (create then list, delete then list)
+
+---
+
 ## API Plan
 
 Routes live under `/api/v1/`, protected by `APILoginVerify` (returns JSON 401, not redirect).
@@ -151,3 +216,6 @@ Routes live under `/api/v1/`, protected by `APILoginVerify` (returns JSON 401, n
 - [x] Implement `PUT /api/v1/entries/{id}` — update an entry
 - [x] Implement `DELETE /api/v1/entries/{id}` — delete an entry
 - [x] Register all API routes and `APILoginVerify` middleware in `main.go`
+- [x] Add tests for API event handlers (`TestAPIEvents` — 13 sub-tests)
+- [x] Add tests for API entry handlers (`TestAPIEntries` — 17 sub-tests)
+- [x] Update CLAUDE.md with testing patterns
