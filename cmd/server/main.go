@@ -318,40 +318,55 @@ func addCookie(w http.ResponseWriter, name, value string, ttl time.Duration) {
 	http.SetCookie(w, &cookie)
 }
 
+func apiUnauthorized(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte(`{"error":"unauthorized"}`))
+}
+
 func APILoginVerify(env *env.Env, repo *repository.DataRepository) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Bearer token takes priority — allows API clients to authenticate
+			// without a browser session. The HTML UI is unaffected: it uses the
+			// separate LoginVerify middleware on the /-/ subrouter.
+			if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+				tokenValue := strings.TrimPrefix(auth, "Bearer ")
+				user, err := repo.GetUserByToken(tokenValue)
+				if err != nil {
+					env.Log.Error("bearer token not found", "error", err)
+					apiUnauthorized(w)
+					return
+				}
+				env.User = user
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Fall back to the session cookie set by the browser OAuth login.
 			cookie, err := r.Cookie(cookieName)
 			if err != nil || cookie.Value == "" {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error":"unauthorized"}`))
+				apiUnauthorized(w)
 				return
 			}
 
 			parts := strings.Split(cookie.Value, ":")
-			uuid, err := uuid.Parse(parts[0])
+			uid, err := uuid.Parse(parts[0])
 			if err != nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error":"unauthorized"}`))
+				apiUnauthorized(w)
 				return
 			}
 
-			user, err := repo.GetUserById(uuid)
+			user, err := repo.GetUserById(uid)
 			if err != nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error":"unauthorized"}`))
+				apiUnauthorized(w)
 				return
 			}
 
 			hashString := fmt.Sprintf("%s%s%s", user.Email, user.AuthId, *user.Salt)
 			hash := md5.Sum([]byte(hashString))
 			if fmt.Sprintf("%x", hash) != parts[1] {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error":"unauthorized"}`))
+				apiUnauthorized(w)
 				return
 			}
 
