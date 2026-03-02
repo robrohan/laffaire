@@ -7,10 +7,10 @@ calendar item within it is called an **Entry**.
 
 ## Installation
 
-Copy this file to your Claude Code skills directory:
+Copy this file to your Claude Code commands directory:
 
 ```sh
-cp skills/laffaire.md ~/.claude/skills/laffaire.md
+cp skills/laffaire.md ~/.claude/commands/laffaire.md
 ```
 
 Then invoke it with `/laffaire` in any Claude Code session.
