@@ -1,0 +1,48 @@
+{{ template "header.html" . }} {{ template "nav_secure.html" . }}
+
+<h1>API Tokens</h1>
+
+<a href="/-/token">+New Token</a>
+
+<section class="content">
+    <table class="fl-table">
+        <thead>
+        <tr>
+            <th width="20%">Name</th>
+            <th width="60%">Token</th>
+            <th width="20%">&nbsp;</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {{ range $val := .Tokens }}
+        <tr>
+            <td>{{ $val.Name }}</td>
+            <td><code>{{ $val.Token }}</code></td>
+            <td class="table-control">
+                <span class="token_delete"
+                    data-tokenid="{{ $val.UUID }}">❌</span>
+            </td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+</section>
+
+<script>
+    const delButtons = document.querySelectorAll(".token_delete");
+    for (let i = 0; i < delButtons.length; ++i) {
+        delButtons[i].addEventListener("click", e => {
+            const tid = e.target.getAttribute("data-tokenid");
+            if (confirm("Are you sure?") == true) {
+                fetch(`/-/tokens?token=${tid}`, {
+                    method: "DELETE"
+                }).then(e => {
+                    document.location = e.url;
+                });
+            }
+        });
+    }
+</script>
+
+{{ template "footer.html" . }}
