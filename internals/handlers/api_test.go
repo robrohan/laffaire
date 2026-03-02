@@ -74,6 +74,18 @@ func newTestDB(t *testing.T) *sqlx.DB {
 					)`,
 				},
 			},
+			{
+				Id: "000002",
+				Up: []string{
+					`CREATE TABLE IF NOT EXISTS token (
+						uuid       TEXT primary key,
+						user_uuid  TEXT,
+						name       TEXT,
+						token      TEXT UNIQUE,
+						created_at TEXT
+					)`,
+				},
+			},
 		},
 	}
 	if _, err := migrate.Exec(db.DB, "sqlite3", src, migrate.Up); err != nil {

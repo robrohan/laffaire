@@ -225,12 +225,12 @@ Routes live under `/api/v1/`, protected by `APILoginVerify` (returns JSON 401, n
 Lets users create named Bearer tokens via the UI, then use them to authenticate API calls
 with `Authorization: Bearer <token>`. Tokens are stored in a `token` table.
 
-- [ ] Add migration `migrations/000002-tokens.sql` for the `token` table
-- [ ] Add `Token` struct to `models.go`
-- [ ] Add token repository methods: `CreateToken`, `GetTokensByUserId`, `DeleteToken`, `GetUserByToken`
-- [ ] Add `TokensPage` (list + delete) and `TokenPage` (create form + show new token) to `handlers.go`
-- [ ] Add `tokens.html` template (list with delete buttons, following `events.html` pattern)
-- [ ] Add `token.html` template (create form; shows token value after POST)
-- [ ] Update `nav_secure.html` to link to `/-/tokens`
-- [ ] Update `APILoginVerify` in `main.go` to accept `Authorization: Bearer <token>` header
-- [ ] Register `/-/tokens` and `/-/token` routes in `main.go`
+- [x] Add migration `migrations/000002-tokens.sql` for the `token` table
+- [x] Add `Token` struct to `models.go`
+- [x] Add token repository methods: `CreateToken`, `GetTokensByUserId`, `DeleteToken`, `GetUserByToken`
+- [x] Add `TokensPage` (list + delete) and `TokenPage` (create form + show new token) to `handlers.go`
+- [x] Add `tokens.html` template (list with delete buttons, following `events.html` pattern)
+- [x] Add `token.html` template (create form; shows token value after POST)
+- [x] Update `nav_secure.html` to link to `/-/tokens`
+- [x] Update `APILoginVerify` in `main.go` to accept `Authorization: Bearer <token>` header
+- [x] Register `/-/tokens` and `/-/token` routes in `main.go`
