@@ -2,7 +2,7 @@
 
 This is a very simple application that lets you create `Entries` and `Events` that can then be shared as a calendar (ical events). This lets you create little projects (like say for school, or some long running project), and then subscribe to that project on your main calendar - for example on google calendar or apple calendar.
 
-This was initially made for me to keep try of my classes, assignments and projects for school, but I've decided to try to use this to learn "coding with AI". I am extending this, using AI tools, to allow AI tools to make little calendars that you can subscribe to - for example for a personal assistant to add events to your calendar without touching your actual calendar.
+This was initially made for me to keep track of my classes, assignments and projects for school. However, I've decided to try to use this to practice "coding with AI". I am extending this app, using AI tools, to allow LLMs to make calendars and event to which you can subscribe (without using your main calendar). For example, if you use and LLM / Agent as a personal assistant, you can have it add and remove events to your calendar without touching your actual calendar.
 
 ## Quick Start
 
