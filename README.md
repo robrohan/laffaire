@@ -1,10 +1,8 @@
-# Go Web Template
+# L'Affaire
 
-This is base template for doing spikes for smaller applications. It uses the following:
+This is a very simple application that lets you create `Entries` and `Events` that can then be shared as a calendar (ical events). This lets you create little projects (like say for school, or some long running project), and then subscribe to that project on your main calendar - for example on google calendar or apple calendar.
 
-- Golang Templates for UI
-- sqlite3 for datastore (can use Postgres)
-- Generic oauth2 login (tested with Google)
+This was initially made for me to keep try of my classes, assignments and projects for school, but I've decided to try to use this to learn "coding with AI". I am extending this, using AI tools, to allow AI tools to make little calendars that you can subscribe to - for example for a personal assistant to add events to your calendar without touching your actual calendar.
 
 ## Quick Start
 
