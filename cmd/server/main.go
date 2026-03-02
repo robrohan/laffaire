@@ -176,7 +176,7 @@ func run() error {
 		secure.HandleFunc("/entries", handlers.EntriesPage(env, templates)).Methods("GET")
 		secure.HandleFunc("/entry", handlers.EntryPage(env, templates)).Methods("GET", "POST", "DELETE")
 
-		secure.HandleFunc("/tokens", handlers.TokensPage(env, templates)).Methods("GET", "DELETE")
+		secure.HandleFunc("/settings", handlers.SettingsPage(env, templates)).Methods("GET", "DELETE", "POST")
 		secure.HandleFunc("/token", handlers.TokenPage(env, templates)).Methods("GET", "POST")
 
 		/////////////////////////

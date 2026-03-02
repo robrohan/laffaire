@@ -16,8 +16,9 @@ type User struct {
 	Email   string  `db:"email"    json:"email"`
 	Name    *string `db:"username" json:"name,omitempty"`
 	Picture *string `db:"picture"  json:"picture,omitempty"`
-	AuthId  string  `db:"authid"   json:"-"`
-	Salt    *string `db:"salt"     json:"-"`
+	AuthId   string  `db:"authid"   json:"-"`
+	Salt     *string `db:"salt"     json:"-"`
+	Timezone *string `db:"timezone" json:"-"`
 }
 
 /////////////////////////////////////////////////////////

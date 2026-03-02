@@ -46,6 +46,7 @@ func newTestDB(t *testing.T) *sqlx.DB {
 						picture TEXT,
 						authid TEXT,
 						salt TEXT,
+						timezone TEXT DEFAULT 'UTC',
 						UNIQUE(email)
 					)`,
 				},

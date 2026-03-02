@@ -76,9 +76,25 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		log.Println("vars", vars["id"])
 
 		eventUuid, _ := uuid.Parse(vars["id"])
-		entries, err := env.Repo.GetEntriesByEventId(eventUuid)
+
+		event, err := env.Repo.GetEventById(eventUuid)
 		if err != nil {
 			log.Println("cannot get the event from the db ", err)
+			return
+		}
+
+		timezone := "UTC"
+		ownerUuid, err := uuid.Parse(event.UserId)
+		if err == nil {
+			owner, err := env.Repo.GetUserById(ownerUuid)
+			if err == nil && owner != nil && owner.Timezone != nil && *owner.Timezone != "" {
+				timezone = *owner.Timezone
+			}
+		}
+
+		entries, err := env.Repo.GetEntriesByEventId(eventUuid)
+		if err != nil {
+			log.Println("cannot get the entries from the db ", err)
 			return
 		}
 
@@ -87,7 +103,7 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		calendarName := "Plan"
 		var ics bytes.Buffer
 		log.Printf("creating prolog")
-		ical.Prolog(&ics, calendarName, "//Rob Rohan//Made up go code//EN", "NZDT")
+		ical.Prolog(&ics, calendarName, "//Rob Rohan//Made up go code//EN", timezone)
 		for i := 0; i < len(*entries); i++ {
 			e := (*entries)[i]
 
@@ -104,8 +120,18 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 				ics.WriteString("BEGIN:VEVENT\r\n")
 				fmt.Fprintf(&ics, "DTSTAMP:%v\r\n", start)
 				fmt.Fprintf(&ics, "UID:R-%v-%v\r\n", calid, timestamp)
-				fmt.Fprintf(&ics, "DTSTART;VALUE=DATE:%v\r\n", start)
-				fmt.Fprintf(&ics, "DTEND;VALUE=DATE:%v\r\n", end)
+				if e.AllDayEvent {
+					startDateOnly := strings.Replace(e.StartDate, "-", "", -1)
+					endDateOnly := strings.Replace(e.EndDate, "-", "", -1)
+					if endDateOnly == "" {
+						endDateOnly = startDateOnly
+					}
+					fmt.Fprintf(&ics, "DTSTART;VALUE=DATE:%v\r\n", startDateOnly)
+					fmt.Fprintf(&ics, "DTEND;VALUE=DATE:%v\r\n", endDateOnly)
+				} else {
+					fmt.Fprintf(&ics, "DTSTART;TZID=%v:%v\r\n", timezone, start)
+					fmt.Fprintf(&ics, "DTEND;TZID=%v:%v\r\n", timezone, end)
+				}
 				fmt.Fprintf(&ics, "SUMMARY:%v\r\n", e.Subject)
 				fmt.Fprintf(&ics, "DESCRIPTION:%v\r\n", e.Description)
 				fmt.Fprintf(&ics, "CATEGORIES:%v\r\n", calendarName)
@@ -326,9 +352,22 @@ func EventPage(env *env.Env, t *template.Template) http.HandlerFunc {
 	}
 }
 
+var availableTimezones = []string{
+	"UTC",
+	"America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+	"America/Toronto", "America/Vancouver", "America/Sao_Paulo",
+	"Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Amsterdam",
+	"Africa/Cairo", "Africa/Johannesburg",
+	"Asia/Dubai", "Asia/Kolkata", "Asia/Singapore", "Asia/Tokyo", "Asia/Shanghai",
+	"Australia/Sydney", "Australia/Perth",
+	"Pacific/Auckland", "Pacific/Honolulu",
+}
+
 type tokenListPageData struct {
 	pageData
-	Tokens *[]models.Token
+	Tokens          *[]models.Token
+	Timezones       []string
+	CurrentTimezone string
 }
 
 type tokenPageData struct {
@@ -336,17 +375,29 @@ type tokenPageData struct {
 	NewToken *models.Token // nil = show form; non-nil = show newly created token
 }
 
-func TokensPage(env *env.Env, t *template.Template) http.HandlerFunc {
+func SettingsPage(env *env.Env, t *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		page := "tokens.html"
+		page := "settings.html"
 
 		if r.Method == "DELETE" {
 			tokenUuid := r.URL.Query().Get("token")
 			if err := env.Repo.DeleteToken(tokenUuid, env.User.UUID); err != nil {
 				log.Println("delete token error", err)
 			}
-			http.Redirect(w, r, "/-/tokens", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "/-/settings", http.StatusTemporaryRedirect)
 			return
+		}
+
+		if r.Method == "POST" {
+			r.ParseForm()
+			tz := r.FormValue("timezone")
+			if tz != "" {
+				if err := env.Repo.UpdateUserTimezone(env.User.UUID, tz); err != nil {
+					log.Println("update timezone error", err)
+				} else {
+					env.User.Timezone = &tz
+				}
+			}
 		}
 
 		userId, _ := uuid.Parse(env.User.UUID)
@@ -356,9 +407,16 @@ func TokensPage(env *env.Env, t *template.Template) http.HandlerFunc {
 			return
 		}
 
+		currentTimezone := "UTC"
+		if env.User.Timezone != nil && *env.User.Timezone != "" {
+			currentTimezone = *env.User.Timezone
+		}
+
 		pd := tokenListPageData{
-			pageData{"Laffaire Tokens", "Laffaire", env.User},
+			pageData{"Laffaire Settings", "Laffaire", env.User},
 			tokens,
+			availableTimezones,
+			currentTimezone,
 		}
 		if t.Lookup(page) != nil {
 			t.ExecuteTemplate(w, page, pd)
