@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"crypto/rand"
 	"fmt"
 	"html/template"
 	"log"
@@ -316,6 +317,84 @@ func EventPage(env *env.Env, t *template.Template) http.HandlerFunc {
 					UUID: uuid.New().String(),
 				}
 				pd.Event = &event
+			}
+		}
+
+		if t.Lookup(page) != nil {
+			t.ExecuteTemplate(w, page, pd)
+		}
+	}
+}
+
+type tokenListPageData struct {
+	pageData
+	Tokens *[]models.Token
+}
+
+type tokenPageData struct {
+	pageData
+	NewToken *models.Token // nil = show form; non-nil = show newly created token
+}
+
+func TokensPage(env *env.Env, t *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := "tokens.html"
+
+		if r.Method == "DELETE" {
+			tokenUuid := r.URL.Query().Get("token")
+			if err := env.Repo.DeleteToken(tokenUuid, env.User.UUID); err != nil {
+				log.Println("delete token error", err)
+			}
+			http.Redirect(w, r, "/-/tokens", http.StatusTemporaryRedirect)
+			return
+		}
+
+		userId, _ := uuid.Parse(env.User.UUID)
+		tokens, err := env.Repo.GetTokensByUserId(userId)
+		if err != nil {
+			log.Println("tokens query errored", err)
+			return
+		}
+
+		pd := tokenListPageData{
+			pageData{"Laffaire Tokens", "Laffaire", env.User},
+			tokens,
+		}
+		if t.Lookup(page) != nil {
+			t.ExecuteTemplate(w, page, pd)
+		}
+	}
+}
+
+func TokenPage(env *env.Env, t *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := "token.html"
+		pd := tokenPageData{
+			pageData{"Laffaire Token", "Laffaire", env.User},
+			nil,
+		}
+
+		if r.Method == "POST" {
+			r.ParseForm()
+			name := r.FormValue("name")
+			if name != "" {
+				b := make([]byte, 32)
+				if _, err := rand.Read(b); err != nil {
+					log.Println("failed to generate token", err)
+					return
+				}
+				token := models.Token{
+					UUID:      uuid.New().String(),
+					UserId:    env.User.UUID,
+					Name:      name,
+					Token:     fmt.Sprintf("%x", b),
+					CreatedAt: time.Now().UTC().Format(time.RFC3339),
+				}
+				if err := env.Repo.CreateToken(&token); err != nil {
+					log.Println("create token error", err)
+					return
+				}
+				pd.NewToken = &token
 			}
 		}
 
