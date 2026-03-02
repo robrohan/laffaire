@@ -37,6 +37,15 @@ type Entry struct {
 	Private     bool   `db:"private"       json:"private"`
 }
 
+// Token is an API bearer token belonging to a user
+type Token struct {
+	UUID      string `db:"uuid"`
+	UserId    string `db:"user_uuid"`
+	Name      string `db:"name"`
+	Token     string `db:"token"`
+	CreatedAt string `db:"created_at"`
+}
+
 // Event is a group of Entries - for example Training, Doctors Appointment, etc
 type Event struct {
 	UUID        string `db:"uuid"        json:"id"`
