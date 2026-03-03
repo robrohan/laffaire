@@ -1,0 +1,66 @@
+{{ template "header.html" . }} {{ template "nav_secure.html" . }}
+
+<h1>Settings</h1>
+
+<section class="content">
+    <h2>Timezone</h2>
+    <form action="/-/settings" method="POST">
+        <div class="control">
+            <label for="timezone">Your Timezone</label>
+            <select name="timezone" id="timezone">
+                {{ range .Timezones }}
+                <option value="{{ . }}" {{ if eq . $.CurrentTimezone }}selected{{ end }}>{{ . }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div class="control">
+            <input type="submit" value="Save Timezone">
+        </div>
+    </form>
+</section>
+
+<section class="content">
+    <h2>API Tokens</h2>
+    <a href="/-/token">+New Token</a>
+
+    <table class="fl-table">
+        <thead>
+        <tr>
+            <th width="20%">Name</th>
+            <th width="60%">Token</th>
+            <th width="20%">&nbsp;</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {{ range $val := .Tokens }}
+        <tr>
+            <td>{{ $val.Name }}</td>
+            <td><code>{{ $val.Token }}</code></td>
+            <td class="table-control">
+                <span class="token_delete"
+                    data-tokenid="{{ $val.UUID }}">❌</span>
+            </td>
+        </tr>
+        {{ end }}
+        </tbody>
+    </table>
+</section>
+
+<script>
+    const delButtons = document.querySelectorAll(".token_delete");
+    for (let i = 0; i < delButtons.length; ++i) {
+        delButtons[i].addEventListener("click", e => {
+            const tid = e.target.getAttribute("data-tokenid");
+            if (confirm("Are you sure?") == true) {
+                fetch(`/-/settings?token=${tid}`, {
+                    method: "DELETE"
+                }).then(e => {
+                    document.location = e.url;
+                });
+            }
+        });
+    }
+</script>
+
+{{ template "footer.html" . }}

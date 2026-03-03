@@ -26,6 +26,7 @@ type DataRepository struct {
 	getTokensByUserIdQuery   *sqlx.Stmt
 	deleteTokenQuery         *sqlx.Stmt
 	getUserByTokenQuery      *sqlx.Stmt
+	updateUserTimezoneQuery  *sqlx.Stmt
 }
 
 func prepareQuery(query string, db *sqlx.DB) *sqlx.Stmt {
@@ -51,13 +52,13 @@ func Attach(schema string, db *sqlx.DB, driver string) *DataRepository {
 	`, db)
 
 	a.getUserByEmailQuery = prepareQuery(`
-		SELECT uuid, email, username, picture, authid, salt
+		SELECT uuid, email, username, picture, authid, salt, timezone
 		FROM users
 		WHERE email = $1
 	`, db)
 
 	a.getUserByIdQuery = prepareQuery(`
-		SELECT uuid, email, username, picture, authid, salt
+		SELECT uuid, email, username, picture, authid, salt, timezone
 		FROM users
 		WHERE uuid = $1
 	`, db)
@@ -156,10 +157,14 @@ func Attach(schema string, db *sqlx.DB, driver string) *DataRepository {
 	`, db)
 
 	a.getUserByTokenQuery = prepareQuery(`
-		SELECT u.uuid, u.email, u.username, u.picture, u.authid, u.salt
+		SELECT u.uuid, u.email, u.username, u.picture, u.authid, u.salt, u.timezone
 		FROM users u
 		JOIN token t ON u.uuid = t.user_uuid
 		WHERE t.token = $1
+	`, db)
+
+	a.updateUserTimezoneQuery = prepareQuery(`
+		UPDATE users SET timezone = $1 WHERE uuid = $2
 	`, db)
 
 	return &a
@@ -365,6 +370,11 @@ func (r *DataRepository) GetUserByToken(tokenValue string) (*models.User, error)
 		return nil, errors.New("token not found")
 	}
 	return &user, nil
+}
+
+func (r *DataRepository) UpdateUserTimezone(userUuid string, timezone string) error {
+	_, err := r.updateUserTimezoneQuery.Exec(timezone, userUuid)
+	return err
 }
 
 func (r *DataRepository) GetUser(email string) (*models.User, error) {
