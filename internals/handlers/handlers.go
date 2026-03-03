@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"regexp"
@@ -49,7 +49,7 @@ type entryPageData struct {
 func TemplateInit() *template.Template {
 	t, err := template.ParseGlob("./templates/*")
 	if err != nil {
-		log.Println("Cannot parse templates: ", err)
+		slog.Default().Error("cannot parse templates", "error", err)
 		os.Exit(-1)
 	}
 
@@ -73,13 +73,13 @@ func createDateTime(date string, time string) string {
 func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		log.Println("vars", vars["id"])
+		env.Log.Debug("ical request", "id", vars["id"])
 
 		eventUuid, _ := uuid.Parse(vars["id"])
 
 		event, err := env.Repo.GetEventById(eventUuid)
 		if err != nil {
-			log.Println("cannot get the event from the db ", err)
+			env.Log.Error("cannot get the event from the db", "error", err)
 			return
 		}
 
@@ -94,16 +94,16 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 
 		entries, err := env.Repo.GetEntriesByEventId(eventUuid)
 		if err != nil {
-			log.Println("cannot get the entries from the db ", err)
+			env.Log.Error("cannot get the entries from the db", "error", err)
 			return
 		}
 
-		log.Println("entries", entries)
+		env.Log.Debug("fetched entries", "count", len(*entries))
 
 		calendarName := event.Title
 		prodIdName := strings.ReplaceAll(calendarName, "//", "-")
 		var ics bytes.Buffer
-		log.Printf("creating prolog")
+		env.Log.Debug("creating prolog")
 		ical.Prolog(&ics, calendarName, fmt.Sprintf("-//Laffaire/%v//EN", prodIdName), timezone)
 		for i := 0; i < len(*entries); i++ {
 			e := (*entries)[i]
@@ -139,7 +139,7 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 				ics.WriteString("END:VEVENT\r\n")
 			}
 		}
-		log.Printf("writing epilog")
+		env.Log.Debug("writing epilog")
 		ical.Epilog(&ics)
 
 		w.Header().Set("Content-Type", "text/calendar")
@@ -164,7 +164,7 @@ func EntriesPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		eventUuid, _ := uuid.Parse(eventId)
 		entries, err := env.Repo.GetEntriesByEventId(eventUuid)
 		if err != nil {
-			log.Println("cannot get the event from the db ", err)
+			env.Log.Error("cannot get entries from the db", "error", err)
 			return
 		}
 
@@ -194,14 +194,14 @@ func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		if eventUuid == "" {
 			eventUuid = r.URL.Query().Get("event")
 		}
-		log.Println("have event uuid", eventUuid)
+		env.Log.Debug("have event uuid", "uuid", eventUuid)
 
 		switch r.Method {
 		case "POST":
 			r.ParseForm()
 			entryUuid := r.FormValue("entry_uuid")
 
-			log.Println("event uuid from form is:", entryUuid)
+			env.Log.Debug("entry uuid from form", "uuid", entryUuid)
 
 			allday := r.FormValue("all_day_event")
 			private := r.FormValue("private")
@@ -222,7 +222,7 @@ func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
 				}
 				err := env.Repo.UpsertEntry(&entry)
 				if err != nil {
-					log.Println("upsert error", err)
+					env.Log.Error("upsert error", "error", err)
 					return
 				}
 
@@ -233,12 +233,12 @@ func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
 			if entryUuid != "" {
 				entryId, err := uuid.Parse(entryUuid)
 				if err != nil {
-					log.Println("cannot parse event uuid ", err)
+					env.Log.Error("cannot parse entry uuid", "error", err)
 					return
 				}
 				entry, err := env.Repo.GetEntryById(entryId)
 				if err != nil {
-					log.Println("cannot get the event from the db ", err)
+					env.Log.Error("cannot get entry from the db", "error", err)
 					return
 				}
 				pd.Entry = entry
@@ -250,14 +250,14 @@ func EntryPage(env *env.Env, t *template.Template) http.HandlerFunc {
 				pd.Entry = &entry
 			}
 		case "DELETE":
-			log.Println("delete entry")
+			env.Log.Debug("delete entry")
 			entryUuid := r.URL.Query().Get("entry")
 			eventUuid := r.URL.Query().Get("event")
-			log.Println(entryUuid, eventUuid)
+			env.Log.Debug("delete entry", "entry", entryUuid, "event", eventUuid)
 
 			err := env.Repo.DeleteEntry(entryUuid, eventUuid)
 			if err != nil {
-				log.Println("cannot delete the entry from the db ", err)
+				env.Log.Error("cannot delete the entry from the db", "error", err)
 				return
 			}
 			http.Redirect(w, r, "/-/entries?event="+eventUuid, http.StatusTemporaryRedirect)
@@ -277,7 +277,7 @@ func EventsPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		userId, _ := uuid.Parse(env.User.UUID)
 		events, err := env.Repo.GetEventsByUserId(userId)
 		if err != nil {
-			log.Println("events query errored ", err)
+			env.Log.Error("events query errored", "error", err)
 			return
 		}
 
@@ -312,7 +312,7 @@ func EventPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		case "POST":
 			r.ParseForm()
 			eventUuid := r.FormValue("event_uuid")
-			log.Println("event uuid from form is: ", eventUuid)
+			env.Log.Debug("event uuid from form", "uuid", eventUuid)
 
 			if eventUuid != "" {
 				event := models.Event{
@@ -330,12 +330,12 @@ func EventPage(env *env.Env, t *template.Template) http.HandlerFunc {
 			if eventUuid != "" {
 				eventId, err := uuid.Parse(eventUuid)
 				if err != nil {
-					log.Println("Cannot parse event uuid ", err)
+					env.Log.Error("cannot parse event uuid", "error", err)
 					return
 				}
 				event, err := env.Repo.GetEventById(eventId)
 				if err != nil {
-					log.Println("Cannot get the event from the db ", err)
+					env.Log.Error("cannot get the event from the db", "error", err)
 					return
 				}
 				pd.Event = event
@@ -383,7 +383,7 @@ func SettingsPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		if r.Method == "DELETE" {
 			tokenUuid := r.URL.Query().Get("token")
 			if err := env.Repo.DeleteToken(tokenUuid, env.User.UUID); err != nil {
-				log.Println("delete token error", err)
+				env.Log.Error("delete token error", "error", err)
 			}
 			http.Redirect(w, r, "/-/settings", http.StatusTemporaryRedirect)
 			return
@@ -394,7 +394,7 @@ func SettingsPage(env *env.Env, t *template.Template) http.HandlerFunc {
 			tz := r.FormValue("timezone")
 			if tz != "" {
 				if err := env.Repo.UpdateUserTimezone(env.User.UUID, tz); err != nil {
-					log.Println("update timezone error", err)
+					env.Log.Error("update timezone error", "error", err)
 				} else {
 					env.User.Timezone = &tz
 				}
@@ -404,7 +404,7 @@ func SettingsPage(env *env.Env, t *template.Template) http.HandlerFunc {
 		userId, _ := uuid.Parse(env.User.UUID)
 		tokens, err := env.Repo.GetTokensByUserId(userId)
 		if err != nil {
-			log.Println("tokens query errored", err)
+			env.Log.Error("tokens query errored", "error", err)
 			return
 		}
 
@@ -439,7 +439,7 @@ func TokenPage(env *env.Env, t *template.Template) http.HandlerFunc {
 			if name != "" {
 				b := make([]byte, 32)
 				if _, err := rand.Read(b); err != nil {
-					log.Println("failed to generate token", err)
+					env.Log.Error("failed to generate token", "error", err)
 					return
 				}
 				token := models.Token{
@@ -450,7 +450,7 @@ func TokenPage(env *env.Env, t *template.Template) http.HandlerFunc {
 					CreatedAt: time.Now().UTC().Format(time.RFC3339),
 				}
 				if err := env.Repo.CreateToken(&token); err != nil {
-					log.Println("create token error", err)
+					env.Log.Error("create token error", "error", err)
 					return
 				}
 				pd.NewToken = &token
