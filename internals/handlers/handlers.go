@@ -100,10 +100,11 @@ func IcalPage(env *env.Env, t *template.Template) http.HandlerFunc {
 
 		log.Println("entries", entries)
 
-		calendarName := "Plan"
+		calendarName := event.Title
+		prodIdName := strings.ReplaceAll(calendarName, "//", "-")
 		var ics bytes.Buffer
 		log.Printf("creating prolog")
-		ical.Prolog(&ics, calendarName, "//Rob Rohan//Made up go code//EN", timezone)
+		ical.Prolog(&ics, calendarName, fmt.Sprintf("-//Laffaire/%v//EN", prodIdName), timezone)
 		for i := 0; i < len(*entries); i++ {
 			e := (*entries)[i]
 
