@@ -1,37 +1,38 @@
+---
+name: laffaire
+description: Use this skill to manage Laffaire calendar projects and entries via its JSON API. Invoke when the user wants to list, create, update, or delete Laffaire events or calendar entries, or asks about their Laffaire instance.
+version: 1.0.0
+allowed-tools: Bash(curl:*)
+---
+
 # Laffaire
 
-Use this skill to manage projects and calendar entries in a Laffaire instance via its JSON API.
+Manage projects and calendar entries in a Laffaire instance via its JSON API.
 
 In Laffaire, a **project** is called an **Event** (a named calendar group), and an individual
 calendar item within it is called an **Entry**.
 
-## Installation
+## Current Config
 
-Copy this file to your Claude Code commands directory:
+- Base URL: !`echo "${LAFFAIRE_URL:-NOT SET}"`
+- Token: !`[ -n "$LAFFAIRE_TOKEN" ] && echo "set (${#LAFFAIRE_TOKEN} chars)" || echo "NOT SET"`
 
-```sh
-cp skills/laffaire.md ~/.claude/commands/laffaire.md
-```
+If either value above shows `NOT SET`, ask the user to provide it before proceeding:
 
-Then invoke it with `/laffaire` in any Claude Code session.
+- `LAFFAIRE_URL` — base URL of the Laffaire instance, e.g. `https://example.com`
+- `LAFFAIRE_TOKEN` — a Bearer token created from the `/-/tokens` page of the UI
 
 ---
 
-## Usage
+## Actions
 
-When the user invokes `/laffaire`, ask them what they want to do:
+Ask the user what they want to do:
 
 1. **List projects** — list all their events
 2. **Create a project** — create a new named event/calendar group
 3. **List entries** — list calendar entries in a project
 4. **Add an entry** — add a calendar entry to an existing project
 5. **Delete a project or entry**
-
-Before making any API call, check if the user has set these values in the conversation or
-environment. If not, ask for them:
-
-- `LAFFAIRE_URL` — base URL of the Laffaire instance, e.g. `https://example.com`
-- `LAFFAIRE_TOKEN` — a Bearer token created from the `/-/tokens` page of the UI
 
 ---
 
@@ -126,11 +127,18 @@ Returns `204 No Content`.
 
 ## Instructions for Claude
 
-- Use `curl` to make API calls unless the user prefers another tool.
+- Use `curl` with `$LAFFAIRE_URL` and `$LAFFAIRE_TOKEN` env vars directly — do not hardcode values.
 - Always confirm the action with the user before deleting anything.
 - When creating an entry, if the user does not supply dates/times, ask before defaulting.
 - If the API returns a non-2xx status, show the user the error JSON and suggest next steps.
 - After creating a project, offer to immediately add entries to it.
+
+### Example curl — list projects
+
+```sh
+curl -s "$LAFFAIRE_URL/api/v1/events" \
+  -H "Authorization: Bearer $LAFFAIRE_TOKEN"
+```
 
 ### Example curl — create a project
 
@@ -156,3 +164,15 @@ curl -s -X POST "$LAFFAIRE_URL/api/v1/entries" \
     "end_time":   "11:00"
   }'
 ```
+
+---
+
+## Installation
+
+To install this skill as a slash command:
+
+```sh
+cp skills/laffaire.md ~/.claude/commands/laffaire.md
+```
+
+Then invoke it with `/laffaire` in any Claude Code session.
