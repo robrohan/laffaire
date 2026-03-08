@@ -36,8 +36,11 @@
         {{ range $val := .Tokens }}
         <tr>
             <td>{{ $val.Name }}</td>
-            <td><code>{{ $val.Token }}</code></td>
+            <td>
+                <code class="token-mask" data-token="{{ $val.Token }}"></code>
+            </td>
             <td class="table-control">
+                <span class="token-eye" title="Show/hide token" style="cursor:pointer">👁</span>
                 <span class="token_delete"
                     data-tokenid="{{ $val.UUID }}">❌</span>
             </td>
@@ -61,6 +64,24 @@
             }
         });
     }
+
+    document.querySelectorAll(".token-mask").forEach(code => {
+        code.textContent = "•".repeat(code.dataset.token.length);
+    });
+
+    document.querySelectorAll(".token-eye").forEach(eye => {
+        eye.addEventListener("click", () => {
+            const code = eye.closest("tr").querySelector(".token-mask");
+            const token = code.dataset.token;
+            if (code.textContent.includes("•")) {
+                code.textContent = token;
+                eye.textContent = "🔒";
+            } else {
+                code.textContent = "•".repeat(token.length);
+                eye.textContent = "👁";
+            }
+        });
+    });
 </script>
 
 {{ template "footer.html" . }}
