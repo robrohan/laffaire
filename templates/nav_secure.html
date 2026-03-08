@@ -1,11 +1,16 @@
 <header>
   <nav>
-    <!-- <a href="/">Root Home</a> -->
-    <a href="/-/home">Home</a>
-    <a href="/-/settings">Settings</a>
+    <ul>
+      <li><a href="/-/home">Home</a></li>
+      <li><a href="/-/settings">Settings</a></li>
+    </ul>
+    <ul>
+      <li>
+        <a href="/-/logout" title="{{ .User.Email }}">
+          <img class="user_avatar" src="{{ .User.Picture }}" alt="{{ .User.Email }}" />
+        </a>
+      </li>
+    </ul>
   </nav>
-  <div class="user_menu">
-    <a href="/-/logout" title="{{ .User.Email }}"><img class="user_avatar"
-      src="{{ .User.Picture}}" alt="{{ .User.Email }}" /></a>
-  </div>
 </header>
+<main>
