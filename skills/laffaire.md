@@ -12,12 +12,11 @@ Manage projects and calendar entries in a Laffaire instance via its JSON API.
 In Laffaire, a **project** is called an **Event** (a named calendar group), and an individual
 calendar item within it is called an **Entry**.
 
-## Current Config
+## Config
 
-- Base URL: !`echo "${LAFFAIRE_URL:-NOT SET}"`
-- Token: !`[ -n "$LAFFAIRE_TOKEN" ] && echo "set (${#LAFFAIRE_TOKEN} chars)" || echo "NOT SET"`
-
-If either value above shows `NOT SET`, ask the user to provide it before proceeding:
+Before making any API call, check whether `LAFFAIRE_URL` and `LAFFAIRE_TOKEN` are already
+set in the environment by running a quick test curl. If a call fails due to missing variables,
+ask the user to provide them:
 
 - `LAFFAIRE_URL` — base URL of the Laffaire instance, e.g. `https://example.com`
 - `LAFFAIRE_TOKEN` — a Bearer token created from the `/-/tokens` page of the UI
