@@ -5,7 +5,6 @@ HASH=$(shell git log --pretty=format:'%h' -n 1)
 include .env
 export
 
-# DOCKER_CONTAINER=$(REGION)-docker.pkg.dev/$(PROJECT_ID)/$(REPOSITORY)/$(PROJECT)
 DOCKER_CONTAINER=$(REPOSITORY)/$(PROJECT)
 
 # List all targets in thie file
@@ -50,8 +49,6 @@ build: clean
 	cp -R datastore build/
 
 docker_build:
-	# docker ps ; \
-	# docker build -t $(DOCKER_CONTAINER):$(HASH) .
 	docker buildx build --platform linux/amd64 -t $(DOCKER_CONTAINER):$(HASH) .
 
 docker_push:
@@ -62,10 +59,6 @@ docker_push:
 docker_run:
 	docker ps ; \
 	docker run --env-file=.env.production -p 8080:3000 $(DOCKER_CONTAINER):$(HASH)
-
-#	Grab a base css that styles form elements with some basic style
-fetch_base_css:
-	curl https://raw.githubusercontent.com/robrohan/pho-ui/main/src/pho-ui.css > templates/pho-ui.css
 
 google:
 	gcloud auth application-default set-quota-project $(PROJECT_ID)
